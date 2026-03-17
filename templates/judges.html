@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DataWatchDawgs — LIVE BATTLE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@300;400;500;700&family=DM+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<style>
+:root {
+  --bg:     #060a06;
+  --bg2:    #080e08;
+  --surf:   #0d150d;
+  --surf2:  #111c11;
+  --border: #1a2e1a;
+  --b2:     #213521;
+
+  --acid:   #b8ff3c;
+  --acid2:  #8acc20;
+  --acid3:  #4d7a10;
+  --adim:   rgba(184,255,60,0.07);
+  --adim2:  rgba(184,255,60,0.03);
+
+  --red:    #ff2244;
+  --rdim:   rgba(255,34,68,0.12);
+  --rdim2:  rgba(255,34,68,0.05);
+  --r2:     #cc1133;
+
+  --blue:   #00c8ff;
+  --bdim:   rgba(0,200,255,0.10);
+  --b3:     #005577;
+
+  --amber:  #ffaa00;
+  --amdim:  rgba(255,170,0,0.10);
+
+  --txt:    #c8e8c8;
+  --txt2:   #4a6e4a;
+  --txt3:   #253825;
+
+  --mono:   'JetBrains Mono', monospace;
+  --disp:   'Bebas Neue', sans-serif;
+  --sans:   'DM Sans', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  font-family: var(--mono);
+  color: var(--txt);
+}
+
+/* scanline overlay */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 3px,
+    rgba(184,255,60,0.018) 3px, rgba(184,255,60,0.018) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* HEADER */
+.hdr {
+  height: 64px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--b2);
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  gap: 20px;
+  position: relative;
+}
+.hdr-logo {
+  font-family: var(--disp);
+  font-size: 28px;
+  letter-spacing: 0.06em;
+  color: var(--acid);
+  line-height: 1;
+}
+.hdr-sub {
+  font-size: 11px;
+  color: var(--txt2);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  border-left: 1px solid var(--border);
+  padding-left: 20px;
+}
+.live-badge {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--acid);
+  border: 1px solid var(--acid3);
+  padding: 4px 12px;
+  border-radius: 3px;
+  background: var(--adim);
+}
+.pulse {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--acid);
+  animation: pulse 1.6s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.3;transform:scale(0.7)} }
+
+/* SCOREBOARD */
+.scoreboard {
+  display: grid;
+  grid-template-columns: 1fr 120px 1fr;
+  gap: 0;
+  padding: 16px 28px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.score-side {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.score-side.red { align-items: flex-start; }
+.score-side.blue { align-items: flex-end; }
+.ss-label {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.ss-label.r { color: var(--red); }
+.ss-label.b { color: var(--blue); }
+.ss-name {
+  font-family: var(--disp);
+  font-size: 22px;
+  letter-spacing: 0.06em;
+  line-height: 1;
+}
+.ss-name.r { color: var(--red); }
+.ss-name.b { color: var(--blue); }
+.ss-sub { font-size: 10px; color: var(--txt2); }
+.score-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+.vs {
+  font-family: var(--disp);
+  font-size: 36px;
+  color: var(--acid);
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+.round-badge {
+  font-size: 9px;
+  color: var(--txt2);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.round-n { color: var(--acid); font-size: 11px; }
+
+/* MAIN ARENA */
+.arena {
+  display: grid;
+  grid-template-columns: 1fr 340px 1fr;
+  flex: 1;
+  overflow: hidden;
+  gap: 0;
+}
+
+/* LEFT — Red Agent feed */
+.feed-panel {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+}
+.feed-panel.blue-side { border-right: none; border-left: 1px solid var(--border); }
+
+.fp-hdr {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.fp-icon {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.fp-icon.r { background: var(--rdim); border: 1px solid rgba(255,34,68,0.4); }
+.fp-icon.b { background: var(--bdim); border: 1px solid rgba(0,200,255,0.4); }
+.fp-title {
+  font-family: var(--disp);
+  font-size: 17px;
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+.fp-title.r { color: var(--red); }
+.fp-title.b { color: var(--blue); }
+.fp-role { font-size: 9px; color: var(--txt2); letter-spacing: 0.12em; text-transform: uppercase; }
+.fp-status {
+  margin-left: auto;
+  font-size: 9px;
+  padding: 2px 8px;
+  border-radius: 2px;
+  letter-spacing: 0.08em;
+}
+.fp-status.attacking {
+  background: var(--rdim);
+  border: 1px solid rgba(255,34,68,0.4);
+  color: var(--red);
+  animation: pulse 1s infinite;
+}
+.fp-status.defending {
+  background: var(--bdim);
+  border: 1px solid rgba(0,200,255,0.4);
+  color: var(--blue);
+  animation: pulse 1.2s infinite;
+}
+.fp-status.idle {
+  background: var(--adim);
+  border: 1px solid var(--acid3);
+  color: var(--acid);
+}
+
+.feed-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 14px;
+}
+
+.feed-entry {
+  display: flex;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #0c160c;
+  animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn { from { opacity:0; transform: translateY(4px); } to { opacity:1; transform:none; } }
+
+.fe-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+.fe-dot.exploit { background: var(--red); box-shadow: 0 0 6px var(--red); }
+.fe-dot.blocked { background: var(--blue); box-shadow: 0 0 6px var(--blue); }
+.fe-dot.patch   { background: var(--acid); box-shadow: 0 0 6px var(--acid); }
+.fe-dot.info    { background: var(--txt2); }
+.fe-dot.net     { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+
+.fe-body { flex: 1; }
+.fe-time { font-size: 9px; color: var(--txt3); margin-bottom: 2px; }
+.fe-msg  { font-size: 11px; line-height: 1.5; }
+.fe-msg.exploit { color: var(--red); }
+.fe-msg.blocked { color: var(--blue); }
+.fe-msg.patch   { color: var(--acid); }
+.fe-msg.info    { color: var(--txt); }
+.fe-msg.net     { color: var(--amber); }
+.fe-payload {
+  margin-top: 4px;
+  background: #040a04;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 4px 8px;
+  font-size: 10px;
+  color: var(--txt2);
+  font-family: var(--mono);
+  word-break: break-all;
+}
+
+/* CENTER — Verdict + battle state */
+.center-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  background: var(--bg2);
+}
+
+/* Big verdict */
+.verdict-display {
+  flex-shrink: 0;
+  width: 100%;
+  padding: 20px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.vd-label {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--txt2);
+}
+.vd-result {
+  font-family: var(--disp);
+  font-size: 52px;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-align: center;
+  transition: all 0.3s;
+}
+.vd-result.pass   { color: var(--acid); text-shadow: 0 0 30px rgba(184,255,60,0.4); }
+.vd-result.fail   { color: var(--red);  text-shadow: 0 0 30px rgba(255,34,68,0.4); }
+.vd-result.battle { color: var(--amber); text-shadow: 0 0 20px rgba(255,170,0,0.3); }
+.vd-result.idle   { color: var(--txt3); text-shadow: none; }
+.vd-sub {
+  font-size: 10px;
+  color: var(--txt2);
+  text-align: center;
+  letter-spacing: 0.08em;
+}
+
+/* Round progress */
+.rounds-track {
+  width: 100%;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.rt-label { font-size: 9px; color: var(--txt2); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 8px; }
+.rounds-dots {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+.rd {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  color: var(--txt2);
+  background: var(--surf);
+  transition: all 0.3s;
+  position: relative;
+}
+.rd.active {
+  border-color: var(--amber);
+  color: var(--amber);
+  background: var(--amdim);
+  animation: pulse 0.8s infinite;
+}
+.rd.pass {
+  border-color: var(--acid);
+  color: var(--acid);
+  background: var(--adim);
+  box-shadow: 0 0 8px rgba(184,255,60,0.2);
+}
+.rd.fail {
+  border-color: var(--red);
+  color: var(--red);
+  background: var(--rdim);
+  box-shadow: 0 0 8px rgba(255,34,68,0.2);
+}
+
+/* Stats */
+.stats-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+.sg-item {
+  background: var(--surf);
+  padding: 12px 14px;
+}
+.sgi-label { font-size: 9px; color: var(--txt2); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+.sgi-val   { font-family: var(--disp); font-size: 26px; letter-spacing: 0.04em; line-height: 1; }
+.sgi-val.r { color: var(--red); }
+.sgi-val.b { color: var(--blue); }
+.sgi-val.g { color: var(--acid); }
+.sgi-val.a { color: var(--amber); }
+.sgi-sub   { font-size: 9px; color: var(--txt3); margin-top: 2px; }
+
+/* Attack type info */
+.attack-info {
+  width: 100%;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  flex: 1;
+  overflow-y: auto;
+}
+.ai-hdr { font-size: 9px; color: var(--txt2); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 8px; }
+.ai-cve {
+  background: var(--surf2);
+  border: 1px solid var(--b2);
+  border-radius: 4px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+.ai-cve-id   { font-size: 9px; color: var(--acid3); letter-spacing: 0.1em; margin-bottom: 3px; }
+.ai-cve-name { font-size: 12px; color: var(--txt); margin-bottom: 3px; font-family: var(--sans); }
+.ai-cve-cvss {
+  display: inline-block;
+  font-size: 10px;
+  padding: 1px 7px;
+  border-radius: 3px;
+}
+.cvss-crit { background: var(--rdim2); border: 1px solid rgba(255,34,68,0.3); color: var(--red); }
+.cvss-high { background: var(--amdim); border: 1px solid rgba(255,170,0,0.3); color: var(--amber); }
+
+/* Network layer bar */
+.net-bar {
+  width: 100%;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  background: var(--bg);
+}
+.nb-label { font-size: 9px; color: var(--amber); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+.nb-attacks {
+  display: flex;
+  gap: 6px;
+}
+.nba {
+  flex: 1;
+  background: var(--surf);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 5px 7px;
+  font-size: 8px;
+  text-align: center;
+  transition: all 0.3s;
+}
+.nba-name { color: var(--txt2); margin-bottom: 2px; }
+.nba-val  { font-size: 11px; }
+.nba.active { border-color: var(--amber); background: var(--amdim); }
+.nba.active .nba-val { color: var(--amber); animation: pulse 0.8s infinite; }
+.nba.done-ok .nba-val  { color: var(--acid); }
+.nba.done-bad .nba-val { color: var(--red); }
+
+/* PROOF BOX — appears at end */
+.proof-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+}
+.proof-overlay.show { display: flex; }
+.proof-box {
+  width: 680px;
+  background: var(--bg2);
+  border: 1px solid var(--acid3);
+  border-radius: 8px;
+  padding: 32px;
+  box-shadow: 0 0 60px rgba(184,255,60,0.08);
+  animation: popIn 0.35s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes popIn { from{transform:scale(0.88);opacity:0} to{transform:scale(1);opacity:1} }
+.pb-label {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--acid3);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pb-verdict {
+  font-family: var(--disp);
+  font-size: 48px;
+  letter-spacing: 0.06em;
+  margin-bottom: 14px;
+}
+.pb-verdict.pass { color: var(--acid); }
+.pb-verdict.fail { color: var(--red); }
+.pb-proof {
+  font-size: 12px;
+  color: var(--txt);
+  line-height: 1.7;
+  border-left: 3px solid var(--acid3);
+  padding-left: 14px;
+  margin-bottom: 14px;
+  font-family: var(--sans);
+}
+.pb-sig {
+  font-size: 10px;
+  color: var(--txt2);
+  background: var(--surf);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 8px 12px;
+  font-family: var(--mono);
+  word-break: break-all;
+}
+.pb-close {
+  margin-top: 20px;
+  background: var(--adim);
+  border: 1px solid var(--acid3);
+  color: var(--acid);
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 8px 20px;
+  border-radius: 3px;
+  cursor: pointer;
+  letter-spacing: 0.1em;
+}
+.pb-close:hover { background: rgba(184,255,60,0.15); }
+
+/* BOTTOM STATUS BAR */
+.statusbar {
+  height: 42px;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 24px;
+  flex-shrink: 0;
+}
+.sb-item { display: flex; align-items: center; gap: 8px; font-size: 10px; }
+.sb-label { color: var(--txt2); letter-spacing: 0.08em; }
+.sb-val   { color: var(--acid); font-family: var(--disp); font-size: 15px; }
+.sb-sep   { width: 1px; height: 20px; background: var(--border); }
+.sb-clock { margin-left: auto; font-size: 12px; color: var(--txt2); font-family: var(--mono); }
+
+/* Page layout */
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+.arena-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--b2); border-radius: 2px; }
+
+/* Flash animation for exploit confirmed */
+@keyframes flash-red {
+  0%,100%{ background: var(--bg); }
+  10%,30%,50%{ background: rgba(255,34,68,0.07); }
+  20%,40%{ background: var(--bg); }
+}
+@keyframes flash-green {
+  0%,100%{ background: var(--bg); }
+  10%,30%{ background: rgba(184,255,60,0.04); }
+  20%{ background: var(--bg); }
+}
+.flash-red   { animation: flash-red 1.2s ease; }
+.flash-green { animation: flash-green 0.8s ease; }
+
+/* WAITING STATE */
+.waiting-msg {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  pointer-events: none;
+}
+.wm-icon { font-size: 40px; opacity: 0.3; animation: pulse 2s infinite; }
+.wm-text { font-family: var(--disp); font-size: 20px; color: var(--txt2); letter-spacing: 0.1em; }
+.wm-sub  { font-size: 10px; color: var(--txt3); letter-spacing: 0.12em; text-transform: uppercase; }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="hdr">
+    <div class="hdr-logo">DataWatchDawgs</div>
+    <div class="hdr-sub">LIVE BATTLE — JUDGES VIEW</div>
+    <div class="live-badge">
+      <span class="pulse"></span>
+      LIVE FEED
+    </div>
+  </div>
+
+  <!-- SCOREBOARD -->
+  <div class="scoreboard">
+    <div class="score-side red">
+      <div class="ss-label r">⚔ ATTACKER</div>
+      <div class="ss-name r">RED AGENT</div>
+      <div class="ss-sub">Application + Network Layer Exploitation</div>
+      <div style="display:flex;gap:10px;margin-top:6px;">
+        <div style="font-size:10px;color:var(--txt2);">Exploits: <span id="red-score" style="color:var(--red);font-size:13px;">0</span></div>
+        <div style="font-size:10px;color:var(--txt2);">Rounds Won: <span id="red-wins" style="color:var(--red);font-size:13px;">0</span></div>
+      </div>
+    </div>
+    <div class="score-center">
+      <div class="vs">VS</div>
+      <div class="round-badge">ROUND <span class="round-n" id="cur-round">—</span> / <span class="round-n" id="max-rounds">5</span></div>
+      <div style="font-size:9px;color:var(--txt3);margin-top:4px;" id="battle-id-display">AWAITING BATTLE</div>
+    </div>
+    <div class="score-side blue">
+      <div class="ss-label b">🛡 DEFENDER</div>
+      <div class="ss-name b">BLUE AGENT</div>
+      <div class="ss-sub">Autonomous Patch Generation &amp; Validation</div>
+      <div style="display:flex;gap:10px;margin-top:6px;justify-content:flex-end;">
+        <div style="font-size:10px;color:var(--txt2);">Patches: <span id="blue-score" style="color:var(--blue);font-size:13px;">0</span></div>
+        <div style="font-size:10px;color:var(--txt2);">Rounds Defended: <span id="blue-wins" style="color:var(--blue);font-size:13px;">0</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARENA -->
+  <div class="arena-wrap" style="flex:1;display:flex;overflow:hidden;">
+    <div class="arena" style="flex:1;overflow:hidden;">
+
+      <!-- LEFT: Red Agent Feed -->
+      <div class="feed-panel" id="red-panel">
+        <div class="fp-hdr">
+          <div class="fp-icon r">🔴</div>
+          <div>
+            <div class="fp-title r">RED AGENT</div>
+            <div class="fp-role">ATTACKER — EXPLOITATION ENGINE</div>
+          </div>
+          <div class="fp-status idle" id="red-status-badge">STANDBY</div>
+        </div>
+        <div class="feed-body" id="red-feed">
+          <div class="waiting-msg" id="red-waiting">
+            <div class="wm-icon">⚔</div>
+            <div class="wm-text">RED AGENT READY</div>
+            <div class="wm-sub">Awaiting battle launch</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CENTER -->
+      <div class="center-panel">
+        <div class="verdict-display">
+          <div class="vd-label">CURRENT VERDICT</div>
+          <div class="vd-result idle" id="vd-main">STANDBY</div>
+          <div class="vd-sub" id="vd-sub">Waiting for battle to start</div>
+        </div>
+
+        <div class="rounds-track">
+          <div class="rt-label">Battle Progress</div>
+          <div class="rounds-dots" id="rounds-dots">
+            <div class="rd" id="rd-1">1</div>
+            <div class="rd" id="rd-2">2</div>
+            <div class="rd" id="rd-3">3</div>
+            <div class="rd" id="rd-4">4</div>
+            <div class="rd" id="rd-5">5</div>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="sg-item">
+            <div class="sgi-label">Exploits Confirmed</div>
+            <div class="sgi-val r" id="stat-exploits">0</div>
+            <div class="sgi-sub">Red Agent breaches</div>
+          </div>
+          <div class="sg-item">
+            <div class="sgi-label">Patches Deployed</div>
+            <div class="sgi-val b" id="stat-patches">0</div>
+            <div class="sgi-sub">Blue Agent fixes</div>
+          </div>
+          <div class="sg-item">
+            <div class="sgi-label">Net Attacks</div>
+            <div class="sgi-val a" id="stat-net">0</div>
+            <div class="sgi-sub">Network layer fires</div>
+          </div>
+          <div class="sg-item">
+            <div class="sgi-label">Battles Verified</div>
+            <div class="sgi-val g" id="stat-verified">0</div>
+            <div class="sgi-sub">HMAC-signed proofs</div>
+          </div>
+        </div>
+
+        <div class="attack-info">
+          <div class="ai-hdr">Active CVE</div>
+          <div class="ai-cve" id="cve-display">
+            <div class="ai-cve-id">Awaiting battle...</div>
+            <div class="ai-cve-name" style="color:var(--txt2);">Select a vulnerability and launch battle from the main dashboard</div>
+          </div>
+        </div>
+
+        <div class="net-bar">
+          <div class="nb-label">
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--amber);display:inline-block;animation:pulse 1.6s infinite;"></span>
+            NETWORK LAYER
+          </div>
+          <div class="nb-attacks">
+            <div class="nba" id="nba-ps"><div class="nba-name">Port Scan</div><div class="nba-val">—</div></div>
+            <div class="nba" id="nba-bf"><div class="nba-name">Brute Force</div><div class="nba-val">—</div></div>
+            <div class="nba" id="nba-c2"><div class="nba-name">C2 Beacon</div><div class="nba-val">—</div></div>
+            <div class="nba" id="nba-ex"><div class="nba-name">Data Exfil</div><div class="nba-val">—</div></div>
+            <div class="nba" id="nba-fl"><div class="nba-name">Flood</div><div class="nba-val">—</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Blue Agent Feed -->
+      <div class="feed-panel blue-side" id="blue-panel">
+        <div class="fp-hdr">
+          <div class="fp-icon b">🔵</div>
+          <div>
+            <div class="fp-title b">BLUE AGENT</div>
+            <div class="fp-role">DEFENDER — PATCH ENGINE</div>
+          </div>
+          <div class="fp-status idle" id="blue-status-badge">STANDBY</div>
+        </div>
+        <div class="feed-body" id="blue-feed">
+          <div class="waiting-msg" id="blue-waiting">
+            <div class="wm-icon">🛡</div>
+            <div class="wm-text">BLUE AGENT READY</div>
+            <div class="wm-sub">Awaiting battle launch</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- STATUS BAR -->
+  <div class="statusbar">
+    <div class="sb-item"><span class="sb-label">BATTLES</span><span class="sb-val" id="sb-battles">0</span></div>
+    <div class="sb-sep"></div>
+    <div class="sb-item"><span class="sb-label">VERIFIED</span><span class="sb-val" id="sb-verified">0</span></div>
+    <div class="sb-sep"></div>
+    <div class="sb-item"><span class="sb-label">NETWORK ATTACKS</span><span class="sb-val" id="sb-net">0</span></div>
+    <div class="sb-sep"></div>
+    <div class="sb-item"><span class="sb-label">LAST VERDICT</span><span class="sb-val" id="sb-last">—</span></div>
+    <div class="sb-clock" id="clock">00:00:00</div>
+  </div>
+
+</div><!-- /page -->
+
+<!-- PROOF OVERLAY -->
+<div class="proof-overlay" id="proof-overlay">
+  <div class="proof-box" id="proof-box">
+    <div class="pb-label">
+      <span style="width:8px;height:8px;border-radius:50%;background:var(--acid);display:inline-block;"></span>
+      MATHEMATICAL PROOF — DATAWATCHDAWGS VERIFIED
+    </div>
+    <div class="pb-verdict" id="pb-verdict">VERIFIED</div>
+    <div class="pb-proof" id="pb-proof"></div>
+    <div class="pb-sig" id="pb-sig"></div>
+    <button class="pb-close" onclick="document.getElementById('proof-overlay').classList.remove('show')">CLOSE ✕</button>
+  </div>
+</div>
+
+<script>
+const socket = io();
+
+let stats = { exploits:0, patches:0, net:0, verified:0, battles:0 };
+let curRound = 0;
+let maxRounds = 5;
+
+// Clock
+setInterval(() => {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('en',{hour12:false});
+}, 1000);
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function addFeed(side, cls, msg, payload, time) {
+  const el = document.getElementById(side+'-feed');
+  const wait = document.getElementById(side+'-waiting');
+  if(wait) wait.style.display = 'none';
+  const ts = time || new Date().toLocaleTimeString('en',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const div = document.createElement('div');
+  div.className = 'feed-entry';
+  div.innerHTML = `
+    <div class="fe-dot ${cls}"></div>
+    <div class="fe-body">
+      <div class="fe-time">${ts}</div>
+      <div class="fe-msg ${cls}">${esc(msg)}</div>
+      ${payload ? `<div class="fe-payload">${esc(payload)}</div>` : ''}
+    </div>`;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+}
+
+function setVerdict(text, cls, sub) {
+  const vd = document.getElementById('vd-main');
+  vd.textContent = text;
+  vd.className = 'vd-result ' + cls;
+  document.getElementById('vd-sub').textContent = sub || '';
+}
+
+function setRound(n, state) {
+  const el = document.getElementById('rd-'+n);
+  if(el) { el.className = 'rd ' + (state||''); }
+}
+
+function setStatus(side, text, cls) {
+  const el = document.getElementById(side+'-status-badge');
+  if(el) { el.textContent = text; el.className = 'fp-status ' + cls; }
+}
+
+function updateStats() {
+  document.getElementById('stat-exploits').textContent  = stats.exploits;
+  document.getElementById('stat-patches').textContent   = stats.patches;
+  document.getElementById('stat-net').textContent       = stats.net;
+  document.getElementById('stat-verified').textContent  = stats.verified;
+  document.getElementById('red-score').textContent      = stats.exploits;
+  document.getElementById('blue-score').textContent     = stats.patches;
+  document.getElementById('sb-battles').textContent     = stats.battles;
+  document.getElementById('sb-verified').textContent    = stats.verified;
+  document.getElementById('sb-net').textContent         = stats.net;
+}
+
+// ── SOCKET EVENTS ──────────────────────────────────────────────────────────
+
+let battleActive = false;
+
+socket.on('battle_start', d => {
+  battleActive = true;
+  stats.battles++;
+  document.getElementById('red-wins').textContent = '0';
+  document.getElementById('blue-wins').textContent = '0';
+  curRound = 0;
+  // Reset rounds
+  for(let i=1;i<=5;i++) setRound(i,'');
+  // Reset feeds
+  document.getElementById('red-feed').innerHTML  = '';
+  document.getElementById('blue-feed').innerHTML = '';
+  // Set CVE display
+  document.getElementById('cve-display').innerHTML = `
+    <div class="ai-cve-id">${esc(d.cve_id)}</div>
+    <div class="ai-cve-name">${esc(d.cve_name)}</div>
+    <span class="ai-cve-cvss ${d.cvss>=9?'cvss-crit':'cvss-high'}">CVSS ${d.cvss}</span>
+  `;
+  document.getElementById('battle-id-display').textContent = d.battle_id;
+  setVerdict('IN PROGRESS', 'battle', `${d.cve_id} — ${d.type}`);
+  updateStats();
+  addFeed('red',  'info', `Battle started — attacking ${d.cve_id}`);
+  addFeed('blue', 'info', `Battle started — defending ${d.cve_id}`);
+});
+
+socket.on('round_phase', d => {
+  curRound = d.round;
+  document.getElementById('cur-round').textContent = d.round;
+  if(d.phase === 'blue') {
+    setRound(d.round, 'active');
+    setStatus('blue','PATCHING','defending');
+    setStatus('red','WATCHING','idle');
+    addFeed('blue','info', `Round ${d.round} — Analyzing vulnerability and generating patch...`);
+  } else if(d.phase === 'red') {
+    setStatus('red','ATTACKING','attacking');
+    setStatus('blue','MONITORING','idle');
+    addFeed('red','info', `Round ${d.round} — Loading exploit payloads...`);
+  } else if(d.phase === 'referee') {
+    setStatus('red','WAITING','idle');
+    setStatus('blue','WAITING','idle');
+  }
+});
+
+socket.on('blue_patch', d => {
+  stats.patches++;
+  updateStats();
+  addFeed('blue','patch',
+    `Patch #${d.patch_id} generated — ${d.patch_type} | Confidence: ${Math.round(d.confidence*100)}%`,
+    d.root_cause
+  );
+  document.getElementById('blue-wins').textContent = stats.patches;
+});
+
+socket.on('red_result', d => {
+  if(d.success) {
+    stats.exploits++;
+    updateStats();
+    addFeed('red','exploit',
+      `EXPLOIT CONFIRMED — ${d.technique}`,
+      d.payload_used
+    );
+    setVerdict('EXPLOITED', 'fail', `Red Agent breach confirmed — Round ${d.round_num}`);
+    document.getElementById('red-wins').textContent = stats.exploits;
+    document.body.classList.remove('flash-green');
+    void document.body.offsetWidth; // reflow
+    document.body.classList.add('flash-red');
+    setTimeout(()=>document.body.classList.remove('flash-red'),1200);
+  } else {
+    addFeed('red','blocked',
+      `All ${d.payloads_tried} payloads BLOCKED by patch`,
+      d.payload_used
+    );
+    addFeed('blue','patch', `Patch held — ${d.payloads_tried} attacks repelled`);
+    document.body.classList.remove('flash-red');
+    void document.body.offsetWidth;
+    document.body.classList.add('flash-green');
+    setTimeout(()=>document.body.classList.remove('flash-green'),800);
+  }
+});
+
+socket.on('network_attack', d => {
+  stats.net++;
+  updateStats();
+  document.getElementById('sb-net').textContent = stats.net;
+  const ok = !d.success;
+  const msg = `[NETWORK — ${(d.layer||d.vuln_type||'').toUpperCase()}] ${d.technique} — ${ok?'BLOCKED ✅':'UNDETECTED ❌'}`;
+  addFeed('red', 'net', msg, null);
+
+  // Update network status chips
+  const map = {port_scan:'ps',brute_force:'bf',c2_beacon:'c2',data_exfiltration:'ex',traffic_flood:'fl'};
+  const k = map[d.vuln_type];
+  if(k) {
+    const chip = document.getElementById('nba-'+k);
+    if(chip) {
+      chip.className = 'nba ' + (ok?'done-ok':'done-bad');
+      chip.querySelector('.nba-val').textContent = ok ? '✅' : '❌';
+    }
+  }
+});
+
+socket.on('referee_verdict', d => {
+  const isPass = d.verdict === 'PASS';
+  setRound(d.round_num, isPass?'pass':'fail');
+  if(isPass) {
+    addFeed('blue','patch', `Referee — Round ${d.round_num} PASS: ${d.proof_statement}`);
+    addFeed('red','blocked',`Round ${d.round_num} — patch verified, escalating...`);
+  } else {
+    addFeed('red','exploit',`Referee — Round ${d.round_num} FAIL: exploit confirmed`);
+    addFeed('blue','info',  `Round ${d.round_num} — patch killed, regenerating...`);
+  }
+});
+
+socket.on('battle_complete', d => {
+  battleActive = false;
+  const isPass = d.final_verdict === 'PASS';
+  if(isPass) stats.verified++;
+  updateStats();
+  setVerdict(isPass ? 'VERIFIED ✓' : 'UNVERIFIED ✗', isPass?'pass':'fail',
+    isPass ? `Patch proven in ${d.total_rounds} round(s) — HMAC signed` : `Exploit persisted — ${d.total_rounds} rounds`);
+  document.getElementById('sb-last').textContent = isPass ? 'VERIFIED' : 'UNVERIFIED';
+
+  // Show proof overlay
+  const pb = document.getElementById('proof-box');
+  pb.style.borderColor = isPass ? 'var(--acid3)' : 'rgba(255,34,68,0.4)';
+  pb.style.boxShadow   = isPass ? '0 0 60px rgba(184,255,60,0.08)' : '0 0 60px rgba(255,34,68,0.08)';
+  document.getElementById('pb-verdict').textContent  = isPass ? 'VERIFIED' : 'UNVERIFIED';
+  document.getElementById('pb-verdict').className    = 'pb-verdict ' + (isPass?'pass':'fail');
+  document.getElementById('pb-proof').textContent    = d.proof_statement;
+  document.getElementById('pb-sig').textContent      = `HMAC-SHA256: ${d.signature} | ${d.battle_id} | Rounds: ${d.total_rounds}`;
+  setTimeout(() => document.getElementById('proof-overlay').classList.add('show'), 1200);
+
+  // Mark remaining rounds idle
+  for(let i=d.total_rounds+1;i<=5;i++) {
+    const el = document.getElementById('rd-'+i);
+    if(el) el.style.opacity = '0.3';
+  }
+  addFeed('blue','patch',`Battle complete — ${isPass?'PATCH VERIFIED':'UNVERIFIED'} | ${d.battle_id}`);
+  addFeed('red','info', `Battle complete — ${d.total_rounds} rounds fought`);
+  setStatus('red','STANDBY','idle');
+  setStatus('blue','STANDBY','idle');
+});
+
+socket.on('op_log', d => {
+  // Only show during an active battle — suppress idle ticker
+  if(!battleActive) return;
+  if(d.ac === 'la-red') addFeed('red','info',d.msg);
+  if(d.ac === 'la-blue') addFeed('blue','info',d.msg);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DataWatchDawgs — Autonomous AI Security</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --ink:#0a0c0a;
+  --ink2:#111411;
+  --ink3:#171c17;
+  --lime:#b8ff3c;
+  --lime2:#8fcc1e;
+  --lime3:#4a6600;
+  --lime4:#2a3a00;
+  --ldim:rgba(184,255,60,0.08);
+  --ldim2:rgba(184,255,60,0.04);
+  --red:#ff2d55;
+  --rdim:rgba(255,45,85,0.1);
+  --amber:#ffb800;
+  --adim:rgba(255,184,0,0.1);
+  --blue:#00d4ff;
+  --bdim:rgba(0,212,255,0.08);
+  --fg:#c8d8c0;
+  --fg2:#7a9472;
+  --fg3:#3a5432;
+  --border:#1e2a1e;
+  --border2:#2a3a2a;
+  --mono:'JetBrains Mono',monospace;
+  --display:'Bebas Neue',sans-serif;
+  --body:'DM Sans',sans-serif;
+}
+html,body{height:100%;background:var(--ink);color:var(--fg);font-family:var(--mono);font-size:12px;overflow:hidden;display:flex;flex-direction:column;}
+
+/* Scanline overlay */
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.08) 3px,rgba(0,0,0,0.08) 4px);pointer-events:none;z-index:9999;}
+
+/* ── HEADER ── */
+header{
+  height:48px;background:var(--ink2);border-bottom:2px solid var(--lime3);
+  display:grid;grid-template-columns:auto 1fr auto;align-items:center;
+  padding:0 20px;gap:20px;flex-shrink:0;position:relative;
+}
+header::after{content:'';position:absolute;bottom:-4px;left:0;right:0;height:1px;background:var(--lime4);}
+.hd-brand{display:flex;align-items:center;gap:12px;}
+.hd-logo{
+  width:34px;height:34px;border:2px solid var(--lime);border-radius:3px;
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+  background:var(--ldim);position:relative;overflow:hidden;
+}
+.hd-logo::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,transparent 40%,rgba(184,255,60,0.15) 50%,transparent 60%);
+  animation:sheen 3s infinite;
+}
+@keyframes sheen{0%{transform:translateX(-100%);}100%{transform:translateX(200%);}}
+.hd-name{font-family:var(--display);font-size:22px;color:var(--lime);letter-spacing:0.05em;}
+.hd-ver{font-size:9px;background:var(--lime3);color:var(--lime);padding:2px 6px;border-radius:2px;margin-top:2px;letter-spacing:0.1em;}
+.hd-op{font-size:10px;color:var(--fg3);letter-spacing:0.05em;}
+.hd-op span{color:var(--lime2);}
+.hd-right{display:flex;align-items:center;gap:10px;}
+.hd-cycle{font-size:10px;color:var(--fg3);}
+.hd-cycle strong{color:var(--lime);font-size:13px;}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--lime);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1;box-shadow:0 0 6px var(--lime);}50%{opacity:0.3;box-shadow:none;}}
+.hd-sel{
+  background:var(--ink3);border:1px solid var(--border2);border-radius:3px;
+  padding:5px 10px;color:var(--lime);font-family:var(--mono);font-size:10px;
+  outline:none;cursor:pointer;width:220px;
+}
+.hd-btn{
+  background:var(--lime);color:var(--ink);border:none;border-radius:3px;
+  padding:7px 18px;font-family:var(--display);font-size:14px;letter-spacing:0.08em;
+  cursor:pointer;transition:all 0.15s;white-space:nowrap;
+}
+.hd-btn:hover{background:var(--lime2);transform:translateY(-1px);}
+.hd-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+.hd-btn.running{background:var(--amber);animation:pulse-btn 1s infinite;}
+@keyframes pulse-btn{0%,100%{opacity:1;}50%{opacity:0.7;}}
+
+/* ── NAV STRIP ── */
+nav{
+  height:36px;background:var(--ink2);border-bottom:1px solid var(--border);
+  display:flex;align-items:stretch;padding:0 20px;gap:2px;flex-shrink:0;
+}
+.ntab{
+  padding:0 16px;font-family:var(--mono);font-size:10px;color:var(--fg3);
+  cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;
+  display:flex;align-items:center;gap:6px;letter-spacing:0.06em;
+  transition:color 0.1s,border-color 0.1s;white-space:nowrap;
+}
+.ntab:hover{color:var(--fg);}
+.ntab.on{color:var(--lime);border-bottom-color:var(--lime);}
+.ntab .dot{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:0.5;}
+.ntab.on .dot{opacity:1;}
+.dot-r{color:var(--red)!important;}
+.dot-b{color:var(--blue)!important;}
+.dot-a{color:var(--amber)!important;}
+.dot-l{color:var(--lime)!important;}
+
+/* ── MAIN SPLIT ── */
+.workspace{display:flex;flex:1;overflow:hidden;}
+
+/* LEFT PANEL — always visible log */
+.log-panel{
+  width:320px;min-width:320px;background:var(--ink2);
+  border-right:1px solid var(--border);display:flex;flex-direction:column;
+}
+.log-hdr{
+  padding:8px 14px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.log-hdr-title{font-size:9px;letter-spacing:0.12em;color:var(--fg3);text-transform:uppercase;}
+.log-hdr-live{font-size:9px;color:var(--lime);display:flex;align-items:center;gap:4px;}
+.log-body{flex:1;overflow-y:auto;padding:8px 0;}
+.log-line{display:flex;gap:0;padding:3px 14px;border-bottom:1px solid rgba(30,42,30,0.5);font-size:10px;line-height:1.5;}
+.log-line:hover{background:var(--ldim2);}
+.lt{color:var(--fg3);min-width:52px;flex-shrink:0;}
+.ll{min-width:60px;flex-shrink:0;font-size:9px;}
+.la{min-width:60px;flex-shrink:0;}
+.lm{color:var(--fg);word-break:break-word;}
+.lv-i{color:var(--fg3);}
+.lv-s{color:var(--lime);}
+.lv-e{color:var(--red);}
+.lv-w{color:var(--amber);}
+.la-r{color:var(--red);}
+.la-b{color:var(--blue);}
+.la-a{color:var(--amber);}
+.la-o{color:var(--lime2);}
+.la-n{color:var(--amber);}
+
+/* RIGHT PANEL — tabbed content */
+.main-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+
+/* ── SECTIONS ── */
+.sec{display:none;flex:1;flex-direction:column;overflow:hidden;}
+.sec.on{display:flex;}
+
+/* ── SECTION HEADER ── */
+.sec-hdr{
+  padding:12px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:14px;flex-shrink:0;
+  background:linear-gradient(to right,var(--ink2),var(--ink));
+}
+.sec-icon{
+  width:38px;height:38px;border-radius:4px;display:flex;align-items:center;
+  justify-content:center;font-size:17px;flex-shrink:0;border:1px solid var(--border2);
+  background:var(--ink3);
+}
+.sec-title{font-family:var(--display);font-size:20px;color:var(--fg);letter-spacing:0.04em;}
+.sec-sub{font-size:10px;color:var(--fg3);margin-top:1px;font-family:var(--body);}
+
+/* ── STAT CARDS ── */
+.stat-row{display:grid;gap:8px;padding:12px 20px;flex-shrink:0;}
+.s4{grid-template-columns:repeat(4,1fr);}
+.s5{grid-template-columns:repeat(5,1fr);}
+.stat{
+  background:var(--ink3);border:1px solid var(--border);border-radius:4px;
+  padding:10px 14px;position:relative;overflow:hidden;
+}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.stat-lime::before{background:var(--lime3);}
+.stat-red::before{background:var(--red);}
+.stat-amber::before{background:var(--amber);}
+.stat-blue::before{background:var(--blue);}
+.stat-lbl{font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:var(--fg3);margin-bottom:4px;}
+.stat-val{font-family:var(--display);font-size:28px;letter-spacing:0.02em;}
+.stat-lime .stat-val{color:var(--lime);}
+.stat-red .stat-val{color:var(--red);}
+.stat-amber .stat-val{color:var(--amber);}
+.stat-blue .stat-val{color:var(--blue);}
+.stat-sub{font-size:9px;color:var(--fg3);margin-top:2px;}
+
+/* ── CONTENT GRID ── */
+.cg{display:grid;gap:10px;padding:0 20px 20px;flex:1;overflow:hidden;}
+.cg-2{grid-template-columns:1fr 1fr;}
+.cg-3{grid-template-columns:1fr 1fr 1fr;}
+.cg-al{grid-template-columns:240px 1fr;}
+.panel{
+  background:var(--ink3);border:1px solid var(--border);border-radius:4px;
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.panel-hdr{
+  padding:7px 14px;border-bottom:1px solid var(--border);
+  font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--fg3);
+  display:flex;justify-content:space-between;align-items:center;flex-shrink:0;
+}
+.panel-hdr span{color:var(--lime);font-size:10px;letter-spacing:0;}
+.panel-body{flex:1;overflow-y:auto;padding:12px 14px;}
+
+/* ── TERMINAL inside panel ── */
+.mini-term{flex:1;overflow-y:auto;padding:8px 12px;font-size:10px;line-height:1.7;}
+
+/* ── TABLE ── */
+.dtbl{width:100%;border-collapse:collapse;font-size:10px;}
+.dtbl th{
+  text-align:left;padding:6px 10px;font-size:8px;letter-spacing:0.1em;
+  text-transform:uppercase;color:var(--fg3);border-bottom:1px solid var(--border2);
+  background:var(--ink2);position:sticky;top:0;font-weight:400;
+}
+.dtbl td{padding:8px 10px;border-bottom:1px solid rgba(30,42,30,0.6);vertical-align:middle;}
+.dtbl tr:hover td{background:var(--ldim2);}
+
+/* ── SEVERITY BADGES ── */
+.badge{display:inline-block;padding:2px 8px;border-radius:2px;font-size:9px;letter-spacing:0.05em;}
+.b-crit{background:var(--rdim);color:var(--red);border:1px solid rgba(255,45,85,0.3);}
+.b-high{background:var(--adim);color:var(--amber);border:1px solid rgba(255,184,0,0.3);}
+.b-med{background:var(--bdim);color:var(--blue);border:1px solid rgba(0,212,255,0.3);}
+.b-ok{background:var(--ldim);color:var(--lime);border:1px solid var(--lime3);}
+.b-pend{background:var(--adim);color:var(--amber);border:1px solid rgba(255,184,0,0.3);animation:blink 2s infinite;}
+
+/* ── CODE BOX ── */
+.codebox{
+  background:var(--ink);border:1px solid var(--border2);border-radius:3px;
+  padding:10px 12px;font-size:10px;color:var(--lime2);line-height:1.6;
+  overflow-x:auto;white-space:pre;font-family:var(--mono);
+}
+
+/* ── TOOL BAR ── */
+.tool-item{display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid rgba(30,42,30,0.5);}
+.tool-name{min-width:90px;color:var(--fg);font-size:10px;}
+.tool-bar{flex:1;height:3px;background:var(--border2);border-radius:2px;overflow:hidden;}
+.tool-fill{height:100%;border-radius:2px;}
+.tool-count{font-size:9px;color:var(--fg3);min-width:20px;text-align:right;}
+
+/* ── AGENT STATUS ── */
+.agent-status{background:var(--ink2);border:1px solid var(--border);border-radius:4px;padding:10px 12px;}
+.as-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(30,42,30,0.5);font-size:10px;}
+.as-row:last-child{border-bottom:none;}
+.as-k{color:var(--fg3);}
+.as-v{color:var(--fg);}
+.working{color:var(--amber);animation:blink 1.5s infinite;font-size:9px;}
+
+/* ── BATTLE MODAL ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:500;display:none;align-items:center;justify-content:center;}
+.modal-bg.on{display:flex;}
+.modal{
+  background:var(--ink2);border:1px solid var(--lime3);border-radius:6px;
+  width:720px;max-height:84vh;overflow-y:auto;
+  box-shadow:0 0 60px rgba(184,255,60,0.06),0 0 120px rgba(0,0,0,0.8);
+}
+.modal-hdr{
+  padding:14px 20px;border-bottom:1px solid var(--border2);
+  display:flex;justify-content:space-between;align-items:center;
+  position:sticky;top:0;background:var(--ink2);z-index:1;
+}
+.modal-title{font-family:var(--display);font-size:18px;color:var(--lime);letter-spacing:0.06em;}
+.modal-close{background:none;border:1px solid var(--border2);color:var(--fg3);cursor:pointer;padding:4px 10px;border-radius:2px;font-size:14px;}
+.modal-close:hover{border-color:var(--red);color:var(--red);}
+.modal-body{padding:20px;}
+.round-block{display:flex;gap:14px;padding:12px 0;border-bottom:1px solid rgba(30,42,30,0.6);}
+.round-num{
+  width:30px;height:30px;border-radius:3px;border:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;font-size:11px;
+  color:var(--fg3);flex-shrink:0;font-family:var(--display);font-size:14px;
+}
+.round-num.pass{border-color:var(--lime);color:var(--lime);background:var(--ldim);}
+.round-num.fail{border-color:var(--red);color:var(--red);background:var(--rdim);}
+.round-num.run{border-color:var(--amber);color:var(--amber);background:var(--adim);animation:blink 0.8s infinite;}
+.round-body{flex:1;}
+.round-agent{font-size:9px;color:var(--fg3);letter-spacing:0.08em;margin-bottom:3px;}
+.round-text{font-size:11px;color:var(--fg);line-height:1.55;}
+.round-verdict{font-size:11px;margin-top:4px;font-weight:500;}
+.round-verdict.pass{color:var(--lime);}
+.round-verdict.fail{color:var(--red);}
+.net-block{
+  background:var(--ink);border-left:2px solid var(--amber);
+  border-radius:2px;padding:7px 12px;margin-top:5px;
+}
+.net-block-hdr{font-size:8px;letter-spacing:0.12em;color:var(--amber);text-transform:uppercase;margin-bottom:3px;}
+.proof-box{
+  background:var(--ink);border:1px solid var(--lime3);border-radius:4px;
+  padding:14px;margin-top:16px;
+}
+.proof-lbl{font-size:8px;letter-spacing:0.15em;color:var(--lime3);text-transform:uppercase;margin-bottom:8px;}
+.proof-text{font-size:12px;color:var(--lime);line-height:1.65;}
+.proof-sig{font-size:9px;color:var(--fg3);margin-top:8px;}
+
+/* ── NETWORK LAYER ── */
+.pair-tbl{width:100%;border-collapse:collapse;font-size:10px;}
+.pair-tbl th{font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:var(--fg3);padding:6px 10px;border-bottom:1px solid var(--border2);font-weight:400;}
+.pair-tbl td{padding:8px 10px;border-bottom:1px solid rgba(30,42,30,0.5);vertical-align:middle;}
+.pair-tbl tr:hover td{background:var(--ldim2);}
+.lpill{display:inline-block;padding:2px 7px;border-radius:2px;font-size:8px;letter-spacing:0.05em;}
+.lp-n{background:var(--bdim);color:var(--blue);border:1px solid rgba(0,212,255,0.2);}
+.lp-a{background:var(--adim);color:var(--amber);border:1px solid rgba(255,184,0,0.2);}
+.lp-m{background:var(--rdim);color:var(--red);border:1px solid rgba(255,45,85,0.2);}
+.lp-e{background:var(--ldim);color:var(--lime);border:1px solid var(--lime4);}
+.lp-v{background:rgba(170,100,255,0.1);color:#d4a0ff;border:1px solid rgba(170,100,255,0.2);}
+.use-panel{background:var(--ink3);border:1px solid var(--border);border-radius:4px;padding:14px 16px;}
+.use-num{font-size:8px;letter-spacing:0.15em;color:var(--fg3);text-transform:uppercase;margin-bottom:4px;}
+.use-title{font-family:var(--display);font-size:17px;color:var(--fg);letter-spacing:0.04em;margin-bottom:5px;}
+.use-desc{font-size:10px;color:var(--fg3);line-height:1.55;font-family:var(--body);margin-bottom:12px;}
+.use-btn{
+  background:var(--ldim);border:1px solid var(--lime3);color:var(--lime);
+  padding:5px 14px;border-radius:2px;font-size:10px;cursor:pointer;
+  font-family:var(--mono);transition:all .12s;letter-spacing:0.05em;
+}
+.use-btn:hover{background:rgba(184,255,60,0.15);}
+.use-btn.amber{background:var(--adim);border-color:rgba(255,184,0,0.3);color:var(--amber);}
+.use-btn.red-btn{background:var(--rdim);border-color:rgba(255,45,85,0.3);color:var(--red);}
+.net-bar-row{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:0 20px 10px;flex-shrink:0;}
+.nbar{background:var(--ink3);border:1px solid var(--border);border-radius:4px;padding:9px 12px;}
+.nbar-layer{font-size:7px;letter-spacing:0.1em;text-transform:uppercase;color:var(--fg3);margin-bottom:2px;}
+.nbar-name{font-size:10px;color:var(--fg);margin-bottom:5px;}
+.nbar-track{height:3px;background:var(--border2);border-radius:2px;overflow:hidden;margin-bottom:3px;}
+.nbar-fill{height:100%;border-radius:2px;transition:width .4s;}
+.nbar-val{font-size:9px;color:var(--fg3);}
+.field-lbl{font-size:9px;color:var(--fg3);margin-bottom:3px;letter-spacing:0.05em;}
+.field-sel{
+  width:100%;background:var(--ink2);border:1px solid var(--border2);border-radius:2px;
+  color:var(--fg);font-family:var(--mono);font-size:10px;padding:5px 8px;outline:none;
+}
+.field-ta{
+  width:100%;background:var(--ink2);border:1px solid var(--border2);border-radius:2px;
+  color:var(--lime2);font-family:var(--mono);font-size:10px;padding:5px 8px;
+  resize:none;outline:none;line-height:1.5;
+}
+.field-ta.amber{color:var(--amber);}
+
+/* ── STATUSBAR ── */
+.statusbar{
+  height:30px;background:var(--ink2);border-top:1px solid var(--border);
+  display:grid;grid-template-columns:repeat(5,1fr);flex-shrink:0;
+}
+.sb-item{
+  display:flex;align-items:center;gap:8px;padding:0 14px;
+  border-right:1px solid var(--border);font-size:10px;
+}
+.sb-item:last-child{border-right:none;}
+.sb-lbl{color:var(--fg3);font-size:9px;letter-spacing:0.06em;}
+.sb-val{color:var(--fg);font-weight:500;}
+.sb-val.lime{color:var(--lime);}
+.sb-val.red{color:var(--red);}
+.sb-val.amber{color:var(--amber);}
+
+/* ── GOVERNANCE ── */
+.pol-row{display:flex;align-items:flex-start;gap:12px;padding:9px 0;border-bottom:1px solid rgba(30,42,30,0.5);}
+.pol-row:last-child{border-bottom:none;}
+.pol-info{flex:1;}
+.pol-name{font-size:11px;color:var(--fg);margin-bottom:2px;}
+.pol-desc{font-size:9px;color:var(--fg3);font-family:var(--body);}
+.toggle{width:34px;height:17px;background:var(--lime3);border-radius:9px;position:relative;cursor:pointer;flex-shrink:0;margin-top:2px;}
+.toggle::after{content:'';position:absolute;width:13px;height:13px;border-radius:50%;background:var(--lime);top:2px;right:2px;}
+.q-grid{display:grid;grid-template-columns:1fr 100px 70px 1fr 50px 100px;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(30,42,30,0.5);font-size:10px;}
+.q-hdr{color:var(--fg3);font-size:8px;letter-spacing:0.1em;text-transform:uppercase;}
+.q-pill{background:var(--ink2);border:1px solid var(--border2);border-radius:2px;padding:2px 7px;font-size:9px;color:var(--fg3);text-align:center;}
+.q-appbtn{background:var(--ldim);border:1px solid var(--lime3);color:var(--lime);padding:3px 8px;border-radius:2px;font-size:9px;cursor:pointer;font-family:var(--mono);}
+.q-rejbtn{background:var(--rdim);border:1px solid rgba(255,45,85,0.3);color:var(--red);padding:3px 8px;border-radius:2px;font-size:9px;cursor:pointer;font-family:var(--mono);}
+.approved-badge{background:var(--ldim);color:var(--lime);border:1px solid var(--lime3);padding:2px 8px;border-radius:2px;font-size:9px;}
+
+/* ── AUDIT ── */
+.audit-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid rgba(30,42,30,0.5);}
+.audit-icon{width:26px;height:26px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;}
+.ai-g{background:var(--ldim);}.ai-r{background:var(--rdim);}.ai-a{background:var(--adim);}
+.audit-body{flex:1;}
+.audit-title{font-size:10px;color:var(--fg);margin-bottom:2px;}
+.audit-meta{font-size:9px;color:var(--fg3);}
+.audit-hash{background:var(--ink2);border:1px solid var(--border);padding:1px 5px;border-radius:2px;font-size:8px;color:var(--fg3);margin-left:4px;}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:var(--ink);}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+::-webkit-scrollbar-thumb:hover{background:var(--lime3);}
+
+/* ── RT RESULTS ── */
+.rt-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(30,42,30,0.5);}
+.rt-ic{width:20px;height:20px;border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;}
+
+/* INPUT SPINNER */
+@keyframes spin-r{to{transform:rotate(360deg);}}
+.spinning{animation:spin-r 1s linear infinite;display:inline-block;}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="hd-brand">
+    <div class="hd-logo">🐾</div>
+    <div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="hd-name">DATAWATCHDAWGS</div>
+        <div class="hd-ver">v2</div>
+      </div>
+      <div class="hd-op">Operation: <span>PROTOCOL_OMEGA</span></div>
+    </div>
+  </div>
+  <div></div>
+  <div class="hd-right">
+    <div class="hd-cycle">Cycle <strong id="hd-cyc">156</strong></div>
+    <div class="live-dot"></div>
+    <select class="hd-sel" id="vsel">
+      <option value="sqli">SQLi — CVE-2026-1234</option>
+      <option value="xss">XSS — CVE-2026-2345</option>
+      <option value="rce">RCE — CVE-2021-44228 (Log4Shell)</option>
+      <option value="ssrf">SSRF — CVE-2026-3456</option>
+      <option value="path">Path Traversal — CVE-2026-4567</option>
+      <optgroup label="── Network Layer ──">
+        <option value="net_port_scan">Port Scan — NET-PSCAN-001</option>
+        <option value="net_brute_force">Brute Force — NET-BRUTE-001</option>
+        <option value="net_c2_beacon">C2 Beacon — NET-C2-001</option>
+        <option value="net_data_exfil">Data Exfil — NET-EXFIL-001</option>
+        <option value="net_traffic_flood">Traffic Flood — NET-FLOOD-001</option>
+      </optgroup>
+    </select>
+    <button class="hd-btn" id="launch-btn" onclick="launchBattle()">⚔ LAUNCH BATTLE</button>
+  </div>
+</header>
+
+<!-- NAV -->
+<nav>
+  <button class="ntab on" onclick="switchTab('loop',this)"><span class="dot dot-l"></span>LOOP</button>
+  <button class="ntab" onclick="switchTab('research',this)"><span class="dot dot-l"></span>RESEARCH</button>
+  <button class="ntab" onclick="switchTab('red',this)"><span class="dot dot-r"></span>RED AGENT</button>
+  <button class="ntab" onclick="switchTab('blue',this)"><span class="dot dot-b"></span>BLUE AGENT</button>
+  <button class="ntab" onclick="switchTab('gov',this)"><span class="dot dot-a"></span>GOVERNANCE</button>
+  <button class="ntab" onclick="switchTab('audit',this)"><span class="dot dot-l"></span>AUDIT</button>
+  <button class="ntab" onclick="switchTab('net',this)"><span class="dot dot-a"></span>NETWORK LAYER</button>
+</nav>
+
+<!-- WORKSPACE -->
+<div class="workspace">
+
+  <!-- LEFT: LIVE LOG (always visible) -->
+  <div class="log-panel">
+    <div class="log-hdr">
+      <span class="log-hdr-title">Operation Log</span>
+      <span class="log-hdr-live"><span class="live-dot" style="width:5px;height:5px;"></span>LIVE</span>
+    </div>
+    <div class="log-body" id="oplog"></div>
+  </div>
+
+  <!-- RIGHT: MAIN CONTENT -->
+  <div class="main-panel">
+
+    <!-- LOOP -->
+    <div class="sec on" id="s-loop">
+      <div class="sec-hdr">
+        <div class="sec-icon">⚡</div>
+        <div>
+          <div class="sec-title">AGENT LOOP</div>
+          <div class="sec-sub">Autonomous attack-patch-verify cycle · Real-time battle orchestration</div>
+        </div>
+      </div>
+      <div class="stat-row s4">
+        <div class="stat stat-lime"><div class="stat-lbl">Total Battles</div><div class="stat-val" id="loop-total">0</div><div class="stat-sub">Completed cycles</div></div>
+        <div class="stat stat-lime"><div class="stat-lbl">Pass Rate</div><div class="stat-val" id="loop-pass">—</div><div class="stat-sub">Patches verified</div></div>
+        <div class="stat stat-amber"><div class="stat-lbl">Cycle</div><div class="stat-val" id="loop-cyc">156</div><div class="stat-sub">Current cycle</div></div>
+        <div class="stat stat-blue"><div class="stat-lbl">Docker</div><div class="stat-val" id="loop-docker">—</div><div class="stat-sub">Real battlefield</div></div>
+      </div>
+      <div class="cg cg-2" style="padding-top:0;">
+        <div class="panel">
+          <div class="panel-hdr">Agent Status</div>
+          <div class="panel-body" style="padding:0;">
+            <div class="mini-term" id="agent-status-log" style="color:var(--fg2);">
+              <div style="color:var(--fg3);padding:20px;text-align:center;">Launch a battle to see live agent activity</div>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr">Network Layer Status <span id="net-summary">—</span></div>
+          <div class="panel-body" style="padding:0;">
+            <div class="mini-term" id="net-status-log" style="color:var(--amber);">
+              <div style="color:var(--fg3);padding:20px;text-align:center;">Network attacks stream here</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESEARCH -->
+    <div class="sec" id="s-research">
+      <div class="sec-hdr">
+        <div class="sec-icon">🔍</div>
+        <div>
+          <div class="sec-title">RESEARCH AGENT</div>
+          <div class="sec-sub">CVE intelligence · CISA KEV correlation · EPSS risk scoring</div>
+        </div>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:20px;" id="res-list"></div>
+    </div>
+
+    <!-- RED AGENT -->
+    <div class="sec" id="s-red">
+      <div class="sec-hdr">
+        <div class="sec-icon" style="border-color:var(--red);background:var(--rdim);">🔴</div>
+        <div style="flex:1;">
+          <div class="sec-title">RED AGENT</div>
+          <div class="sec-sub">Offensive exploitation · Real HTTP attacks · Payload library</div>
+        </div>
+        <span class="working" id="red-status">● ACTIVE</span>
+      </div>
+      <div class="stat-row s4">
+        <div class="stat stat-red"><div class="stat-lbl">Findings</div><div class="stat-val" id="r-findings">6</div><div class="stat-sub">Discovered</div></div>
+        <div class="stat stat-red"><div class="stat-lbl">Confirmed</div><div class="stat-val" id="r-confirmed">2</div><div class="stat-sub">Exploits proven</div></div>
+        <div class="stat stat-red"><div class="stat-lbl">Critical</div><div class="stat-val" id="r-critical">3</div><div class="stat-sub">CVSS ≥ 9.0</div></div>
+        <div class="stat stat-lime"><div class="stat-lbl">Arsenal</div><div class="stat-val">180+</div><div class="stat-sub">Tools active</div></div>
+      </div>
+      <div class="cg cg-al" style="padding-top:0;">
+        <div style="display:flex;flex-direction:column;gap:10px;overflow-y:auto;">
+          <div class="panel">
+            <div class="panel-hdr">Tool Arsenal</div>
+            <div class="panel-body" style="padding:10px 14px;" id="arsenal"></div>
+          </div>
+          <div class="agent-status">
+            <div class="as-row"><span class="as-k">Status</span><span class="working">● WORKING</span></div>
+            <div class="as-row"><span class="as-k">Task</span><span class="as-v" id="r-task">Monitoring CVEs</span></div>
+            <div class="as-row"><span class="as-k">Completed</span><span class="as-v">42</span></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;overflow:hidden;">
+          <div class="panel" style="height:140px;flex-shrink:0;">
+            <div class="panel-hdr">Red Agent Terminal</div>
+            <div class="mini-term" id="redlog" style="color:var(--red);"></div>
+          </div>
+          <div class="panel" style="flex:1;overflow:hidden;">
+            <div class="panel-hdr">Findings</div>
+            <div style="overflow-y:auto;flex:1;">
+              <table class="dtbl"><thead><tr><th>SEV</th><th>FINDING</th><th>LOCATION</th><th>CVSS</th><th>STATUS</th><th></th></tr></thead>
+              <tbody id="findings-body"></tbody></table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLUE AGENT -->
+    <div class="sec" id="s-blue">
+      <div class="sec-hdr">
+        <div class="sec-icon" style="border-color:var(--blue);background:var(--bdim);">🔵</div>
+        <div>
+          <div class="sec-title">BLUE AGENT</div>
+          <div class="sec-sub">Autonomous patch generation · Digital twin validation · Exploit replay</div>
+        </div>
+      </div>
+      <div class="stat-row s4">
+        <div class="stat stat-lime"><div class="stat-lbl">Generated</div><div class="stat-val" id="b-gen">4</div><div class="stat-sub">Patches this cycle</div></div>
+        <div class="stat stat-lime"><div class="stat-lbl">Validated</div><div class="stat-val" id="b-val">3</div><div class="stat-sub">Exploit blocked</div></div>
+        <div class="stat stat-amber"><div class="stat-lbl">Retries</div><div class="stat-val" id="b-retry">1</div><div class="stat-sub">Evolutions</div></div>
+        <div class="stat stat-red"><div class="stat-lbl">Failed</div><div class="stat-val" id="b-fail">0</div><div class="stat-sub">Exploit succeeded</div></div>
+      </div>
+      <div class="cg cg-2" style="padding-top:0;">
+        <div class="panel">
+          <div class="panel-hdr">Fix Queue <span id="fix-count">3 patches</span></div>
+          <div class="panel-body" id="fix-queue"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr">Active Patch — <span id="patch-id">BLUE-3-SQLI</span> <span id="patch-conf" style="color:var(--fg3);font-size:9px;"></span></div>
+          <div class="panel-body">
+            <div style="font-size:9px;color:var(--fg3);margin-bottom:7px;" id="patch-root">Launch a battle to see live patch generation</div>
+            <div class="codebox" id="patch-code"># DataWatchDawgs Blue Agent
+# Select a vulnerability and click LAUNCH BATTLE</div>
+            <div style="margin-top:10px;font-size:10px;color:var(--fg3);" id="patch-result">Awaiting battle...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GOVERNANCE -->
+    <div class="sec" id="s-gov">
+      <div class="sec-hdr">
+        <div class="sec-icon" style="border-color:var(--amber);background:var(--adim);">⚖️</div>
+        <div>
+          <div class="sec-title">GOVERNANCE AGENT</div>
+          <div class="sec-sub">Risk evaluation · Blast-radius limiting · OPA policy enforcement</div>
+        </div>
+      </div>
+      <div class="stat-row s4">
+        <div class="stat stat-amber"><div class="stat-lbl">Pending</div><div class="stat-val" id="g-pend">2</div><div class="stat-sub">Awaiting review</div></div>
+        <div class="stat stat-lime"><div class="stat-lbl">Approved</div><div class="stat-val" id="g-app">1</div><div class="stat-sub">Cleared for deploy</div></div>
+        <div class="stat stat-red"><div class="stat-lbl">Rejected</div><div class="stat-val" id="g-rej">0</div><div class="stat-sub">Blocked by policy</div></div>
+        <div class="stat stat-blue"><div class="stat-lbl">Policies</div><div class="stat-val">6</div><div class="stat-sub">Active rules</div></div>
+      </div>
+      <div class="cg cg-2" style="padding-top:0;">
+        <div class="panel">
+          <div class="panel-hdr">Enforcement Policies</div>
+          <div class="panel-body" id="pol-list"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-hdr">Risk Queue <span class="b-pend" id="q-badge">2 pending</span></div>
+          <div style="overflow-y:auto;flex:1;">
+            <div class="q-grid q-hdr" style="padding:6px 14px;"><div>Finding</div><div>Action</div><div>Risk</div><div>Reason</div><div>Time</div><div>Status</div></div>
+            <div id="gov-queue" style="padding:0 14px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUDIT -->
+    <div class="sec" id="s-audit">
+      <div class="sec-hdr">
+        <div class="sec-icon">📋</div>
+        <div>
+          <div class="sec-title">AUDIT &amp; DOCS</div>
+          <div class="sec-sub">Immutable HMAC-SHA256 signed chain · Tamper-proof evidence trail</div>
+        </div>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:12px 20px;" id="audit-list"></div>
+    </div>
+
+    <!-- NETWORK LAYER -->
+    <div class="sec" id="s-net">
+      <div class="sec-hdr">
+        <div class="sec-icon" style="border-color:var(--amber);background:var(--adim);">🌐</div>
+        <div style="flex:1;">
+          <div class="sec-title">NETWORK LAYER</div>
+          <div class="sec-sub">attack_sim · port scan · brute force · C2 beacon · data exfil · traffic flood</div>
+        </div>
+        <button class="use-btn red-btn" onclick="runRedTeam()">🔴 FULL RED TEAM</button>
+      </div>
+
+      <!-- Pairing table -->
+      <div style="padding:10px 20px 0;flex-shrink:0;">
+        <div style="font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:var(--fg3);margin-bottom:6px;">⚡ Dual-Layer Attack Pairing — fires simultaneously every battle</div>
+        <div style="background:var(--ink3);border:1px solid var(--border);border-radius:4px;overflow:hidden;">
+          <table class="pair-tbl">
+            <thead><tr><th>App Layer (Red Agent)</th><th>CVE</th><th>+</th><th>Network Layer</th><th>ID</th><th>Layer</th><th>Last Result</th></tr></thead>
+            <tbody>
+              <tr><td>SQL Injection</td><td style="color:var(--fg3);font-size:9px;">CVE-2026-1234</td><td style="color:var(--fg3);">→</td><td>Port Scan</td><td style="color:var(--fg3);font-size:9px;">NET-PSCAN-001</td><td><span class="lpill lp-n">network</span></td><td id="pr-sqli" style="font-size:9px;color:var(--fg3);">—</td></tr>
+              <tr><td>XSS</td><td style="color:var(--fg3);font-size:9px;">CVE-2026-2345</td><td style="color:var(--fg3);">→</td><td>Brute Force</td><td style="color:var(--fg3);font-size:9px;">NET-BRUTE-001</td><td><span class="lpill lp-a">auth</span></td><td id="pr-xss" style="font-size:9px;color:var(--fg3);">—</td></tr>
+              <tr><td>RCE / Log4Shell</td><td style="color:var(--fg3);font-size:9px;">CVE-2021-44228</td><td style="color:var(--fg3);">→</td><td>C2 Beacon</td><td style="color:var(--fg3);font-size:9px;">NET-C2-001</td><td><span class="lpill lp-m">malware</span></td><td id="pr-rce" style="font-size:9px;color:var(--fg3);">—</td></tr>
+              <tr><td>SSRF</td><td style="color:var(--fg3);font-size:9px;">CVE-2026-3456</td><td style="color:var(--fg3);">→</td><td>Data Exfil</td><td style="color:var(--fg3);font-size:9px;">NET-EXFIL-001</td><td><span class="lpill lp-e">egress</span></td><td id="pr-ssrf" style="font-size:9px;color:var(--fg3);">—</td></tr>
+              <tr><td>Path Traversal</td><td style="color:var(--fg3);font-size:9px;">CVE-2026-4567</td><td style="color:var(--fg3);">→</td><td>Traffic Flood</td><td style="color:var(--fg3);font-size:9px;">NET-FLOOD-001</td><td><span class="lpill lp-v">volumetric</span></td><td id="pr-path" style="font-size:9px;color:var(--fg3);">—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Status bars -->
+      <div class="net-bar-row" style="padding-top:10px;">
+        <div class="nbar"><div class="nbar-layer">network</div><div class="nbar-name">Port Scan</div><div class="nbar-track"><div class="nbar-fill" id="nb-ps" style="width:0%;background:var(--blue);"></div></div><div class="nbar-val" id="nv-ps">—</div></div>
+        <div class="nbar"><div class="nbar-layer">auth</div><div class="nbar-name">Brute Force</div><div class="nbar-track"><div class="nbar-fill" id="nb-bf" style="width:0%;background:var(--amber);"></div></div><div class="nbar-val" id="nv-bf">—</div></div>
+        <div class="nbar"><div class="nbar-layer">malware</div><div class="nbar-name">C2 Beacon</div><div class="nbar-track"><div class="nbar-fill" id="nb-c2" style="width:0%;background:var(--red);"></div></div><div class="nbar-val" id="nv-c2">—</div></div>
+        <div class="nbar"><div class="nbar-layer">egress</div><div class="nbar-name">Data Exfil</div><div class="nbar-track"><div class="nbar-fill" id="nb-ex" style="width:0%;background:var(--lime);"></div></div><div class="nbar-val" id="nv-ex">—</div></div>
+        <div class="nbar"><div class="nbar-layer">volumetric</div><div class="nbar-name">Traffic Flood</div><div class="nbar-track"><div class="nbar-fill" id="nb-fl" style="width:0%;background:#d4a0ff;"></div></div><div class="nbar-val" id="nv-fl">—</div></div>
+      </div>
+
+      <!-- Use 3/4/5 + terminal -->
+      <div class="cg cg-3" style="padding-top:0;overflow-y:auto;">
+        <!-- Use 3 -->
+        <div class="use-panel" style="display:flex;flex-direction:column;gap:8px;">
+          <div class="use-num">Use 3</div>
+          <div class="use-title">SOC TRAINING</div>
+          <div class="use-desc">Fire a live attack, score analyst detection speed and rule accuracy.</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+            <div><div class="field-lbl">Attack Type</div>
+            <select id="soc-type" class="field-sel">
+              <option value="port_scan">Port Scan</option><option value="brute_force">Brute Force</option>
+              <option value="c2_beacon">C2 Beacon</option><option value="data_exfiltration">Data Exfil</option>
+              <option value="traffic_flood">Traffic Flood</option>
+            </select></div>
+            <div><div class="field-lbl">Detected?</div>
+            <select id="soc-det" class="field-sel">
+              <option value="true">Yes — caught it</option><option value="false">No — missed it</option>
+            </select></div>
+          </div>
+          <div><div class="field-lbl">Your detection rule</div>
+          <textarea id="soc-rule" class="field-ta" rows="2" placeholder="alert tcp any any -> $HOME_NET any (threshold: type both, track by_src, count 30, seconds 10;)"></textarea></div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="use-btn" onclick="runSocTraining()">▶ RUN TRAINING</button>
+            <span id="soc-st" style="font-size:9px;color:var(--fg3);"></span>
+          </div>
+          <div id="soc-res"></div>
+        </div>
+
+        <!-- Use 4 -->
+        <div class="use-panel" style="display:flex;flex-direction:column;gap:8px;">
+          <div class="use-num">Use 4</div>
+          <div class="use-title">WAF VERIFICATION</div>
+          <div class="use-desc">Submit a firewall rule. Red Agent verifies it blocks. Referee signs proof.</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;align-items:end;">
+            <div><div class="field-lbl">Attack Type</div>
+            <select id="waf-type" class="field-sel">
+              <option value="brute_force">Brute Force</option><option value="port_scan">Port Scan</option>
+              <option value="c2_beacon">C2 Beacon</option><option value="data_exfiltration">Data Exfil</option>
+              <option value="traffic_flood">Traffic Flood</option>
+            </select></div>
+            <button class="use-btn amber" onclick="runWafVerify()">⚙ VERIFY RULE</button>
+          </div>
+          <div><div class="field-lbl">Proposed firewall / IDS rule</div>
+          <textarea id="waf-rule" class="field-ta amber" rows="3" placeholder="limit_req zone=login burst=5 nodelay; limit_req_status 429;"></textarea></div>
+          <div id="waf-res"></div>
+        </div>
+
+        <!-- Use 5 + terminal -->
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div class="use-panel">
+            <div class="use-num">Use 5</div>
+            <div class="use-title" style="margin-bottom:5px;">RED TEAM AUTOMATION</div>
+            <div class="use-desc">All 5 attack types in sequence. CI/CD gate or nightly run.</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+              <button class="use-btn red-btn" onclick="runRedTeam()">🔴 LAUNCH CAMPAIGN</button>
+              <span id="rt-st" style="font-size:9px;color:var(--fg3);">Ready</span>
+            </div>
+            <div id="rt-res"><div style="font-size:9px;color:var(--fg3);">Run a campaign to see results</div></div>
+          </div>
+          <div class="panel" style="flex:1;min-height:130px;">
+            <div class="panel-hdr">Network Terminal <span style="color:var(--amber);">● LIVE</span></div>
+            <div class="mini-term" id="netlog" style="color:var(--amber);"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main-panel -->
+</div><!-- /workspace -->
+
+<!-- STATUSBAR -->
+<div class="statusbar">
+  <div class="sb-item"><span class="sb-lbl">FINDINGS</span><span class="sb-val" id="sb-findings">6</span></div>
+  <div class="sb-item"><span class="sb-lbl">CRITICAL</span><span class="sb-val red">3</span></div>
+  <div class="sb-item"><span class="sb-lbl">AUTO-FIXED</span><span class="sb-val lime" id="sb-fixed">4</span></div>
+  <div class="sb-item"><span class="sb-lbl">NETWORK BLOCKED</span><span class="sb-val lime" id="sb-netblock">0/0</span></div>
+  <div class="sb-item"><span class="sb-lbl">UPTIME</span><span class="sb-val amber">99.9%</span></div>
+</div>
+
+<!-- BATTLE MODAL -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="modal-title">⚔ BATTLE ENGINE</div>
+      <button class="modal-close" onclick="closeModal()">✕ CLOSE</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+const socket = io();
+let battleRunning = false;
+let oplogLines = [];
+let netlogLines = [];
+let agentLogLines = [];
+let auditEntries = [];
+let autoFixed = 4;
+let netBlocked = 0, netTotal = 0;
+
+// ── STATIC DATA ───────────────────────────────────────────────────────────
+const TOOLS = [
+  {n:"SAST",c:12,col:"var(--red)",p:60},{n:"DAST",c:8,col:"var(--amber)",p:40},
+  {n:"SCA",c:18,col:"var(--amber)",p:75},{n:"Container",c:6,col:"var(--blue)",p:30},
+  {n:"IaC",c:11,col:"var(--fg3)",p:52},{n:"Secrets",c:7,col:"var(--fg3)",p:35},
+  {n:"Fuzzing",c:4,col:"var(--fg3)",p:20},{n:"API",c:5,col:"var(--lime)",p:25},
+  {n:"Cloud",c:14,col:"var(--fg3)",p:65},{n:"Network",c:8,col:"var(--fg3)",p:40},
+  {n:"Exploit",c:15,col:"var(--red)",p:70},{n:"Mobile",c:4,col:"var(--fg3)",p:18},
+  {n:"Supply Chain",c:6,col:"var(--fg3)",p:28},{n:"Compliance",c:9,col:"var(--fg3)",p:42},
+];
+
+const FINDINGS = [
+  {s:"crit",n:"SQL Injection in /api/users",cve:"CVE-2026-1234",loc:"users.py:47",cvss:9.8,st:"Critical",vk:"sqli"},
+  {s:"high",n:"Stored XSS in comment renderer",cve:"CVE-2026-2345",loc:"CommentCard.tsx:23",cvss:7.5,st:"High",vk:"xss"},
+  {s:"crit",n:"SSRF via PDF generation",cve:"CVE-2026-3456",loc:"pdf_generator.py:112",cvss:9.1,st:"Critical",vk:"ssrf"},
+  {s:"high",n:"Path traversal in file upload",cve:"CVE-2026-4567",loc:"upload.go:89",cvss:8.2,st:"High",vk:"path"},
+  {s:"crit",n:"Log4Shell — JNDI injection",cve:"CVE-2021-44228",loc:"pom.xml:log4j",cvss:10.0,st:"Critical",vk:"rce"},
+  {s:"med",n:"Hardcoded API key in config",cve:"CVE-798",loc:"aws.yaml:12",cvss:5.5,st:"Auto-Fixed",vk:"sqli"},
+];
+
+const POLICIES = [
+  {n:"Auto-merge low/medium",d:"Auto-merge for LOW/MEDIUM severity with 0 regressions"},
+  {n:"CISO approval for critical",d:"Require CISO sign-off for all CRITICAL findings"},
+  {n:"No auth service changes",d:"DEFAULT-DENY: auth-service excluded from scope"},
+  {n:"Max 1 service per cycle",d:"Rate limit: one service patched per cycle"},
+  {n:"Blast radius check",d:"Simulate impact on dependent services before deploy"},
+  {n:"Zero regression gate",d:"Block deploy if test coverage drops below 80%"},
+];
+
+const GOVQ = [
+  {f:"SQL Injection in /api/users",a:"require_approval",r:"critical",reason:"CISA KEV + EPSS 0.89",t:"9h ago",s:"pending"},
+  {f:"Stored XSS in comment renderer",a:"notify_and_wait",r:"high",reason:"Stored XSS in frontend",t:"10h ago",s:"pending"},
+  {f:"Hardcoded API key",a:"auto_merge",r:"medium",reason:"Auto-merged: severity low",t:"1d ago",s:"approved"},
+];
+
+const AUDIT_SEED = [
+  {ic:"✅",cl:"ai-g",t:"Audit #4821 signed — HMAC-SHA256 chain verified",m:"16:01:20 UTC | CVE-2026-1234",h:"a3f9b2c1..."},
+  {ic:"🔴",cl:"ai-r",t:"EXPLOIT CONFIRMED: SQLi — full DB access achieved",m:"16:00:45 UTC | Red Agent | CRITICAL"},
+  {ic:"✅",cl:"ai-g",t:"Fix validated — exploit blocked, 0 regressions",m:"16:01:15 UTC | Blue Agent | Round 3"},
+  {ic:"⚠️",cl:"ai-a",t:"Critical finding requires CISO approval — SLA: 2h",m:"16:00:46 UTC | Governance"},
+  {ic:"✅",cl:"ai-g",t:"RE-ATTACK: Exploit BLOCKED on production. RESOLVED.",m:"16:01:25 UTC | Orchestrator"},
+];
+
+const OPLOG_SEED = [
+  {ts:"16:00:01",lv:"lv-i",la:"la-o",ag:"orch:",msg:"Cycle #156 started — all agents nominal"},
+  {ts:"16:00:02",lv:"lv-i",la:"la-o",ag:"research:",msg:"CISA KEV: 2 new entries affecting stack"},
+  {ts:"16:00:05",lv:"lv-s",la:"la-o",ag:"research:",msg:"CVE-2026-1234 CRITICAL — CISA KEV + EPSS 0.89"},
+  {ts:"16:00:12",lv:"lv-i",la:"la-r",ag:"red:",msg:"Exploit chain started for CVE-2026-1234"},
+  {ts:"16:00:45",lv:"lv-e",la:"la-r",ag:"red:",msg:"EXPLOIT CONFIRMED: SQLi — full DB access"},
+  {ts:"16:01:00",lv:"lv-i",la:"la-b",ag:"blue:",msg:"Generating parameterized query fix"},
+  {ts:"16:01:15",lv:"lv-s",la:"la-b",ag:"blue:",msg:"Fix validated — exploit blocked, 0 regressions"},
+  {ts:"16:01:20",lv:"lv-i",la:"la-o",ag:"audit:",msg:"Record #4821 signed — HMAC chain verified"},
+];
+
+// ── SOCKET ────────────────────────────────────────────────────────────────
+socket.on("connected", d => {
+  setTxt("hd-cyc", d.cycle);
+  setTxt("loop-cyc", d.cycle);
+  if (d.stats) updateStats(d.stats);
+});
+
+socket.on("op_log", d => {
+  const lvcMap = {"INFO":"lv-i","SUCCESS":"lv-s","ERROR":"lv-e","WARNING":"lv-w"};
+  const lacMap = {"la-orch":"la-o","la-red":"la-r","la-blue":"la-b","la-audit":"la-a","la-net":"la-n"};
+  oplogLines.push({ts:d.ts,lv:lvcMap[d.lv]||"lv-i",la:lacMap[d.ac]||"la-o",ag:d.ag,msg:d.msg});
+  if (oplogLines.length > 100) oplogLines.shift();
+  renderOpLog();
+  // Also push to agent status log
+  agentLogLines.push({ts:d.ts,lv:lvcMap[d.lv]||"lv-i",la:lacMap[d.ac]||"la-o",ag:d.ag,msg:d.msg});
+  if (agentLogLines.length > 40) agentLogLines.shift();
+  renderAgentLog();
+});
+
+socket.on("battle_start", d => {
+  openModal();
+  document.getElementById("modal-body").innerHTML = `
+    <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border2);">
+      <div style="font-family:var(--display);font-size:18px;color:var(--fg);letter-spacing:0.04em;margin-bottom:4px;">${esc(d.cve_name)}</div>
+      <div style="font-size:10px;color:var(--fg3);">${esc(d.cve_id)} &nbsp;·&nbsp; CVSS <span style="color:${d.cvss>=9?'var(--red)':d.cvss>=7?'var(--amber)':'var(--blue)'};">${d.cvss}</span> &nbsp;·&nbsp; ${esc(d.type)}</div>
+      <div style="font-size:10px;color:var(--fg3);margin-top:3px;font-family:var(--body);">${esc(d.desc)}</div>
+    </div>
+    <div id="m-rounds"></div><div id="m-proof"></div>`;
+  battleRunning = true;
+  const btn = document.getElementById("launch-btn");
+  btn.disabled = true; btn.textContent = "⟳ RUNNING..."; btn.classList.add("running");
+});
+
+socket.on("round_phase", d => {
+  const rounds = document.getElementById("m-rounds");
+  if (!rounds) return;
+  const {round, phase} = d;
+  if (phase === "blue") {
+    rounds.innerHTML += `<div class="round-block" id="rb-b-${round}"><div class="round-num run">${round}</div><div class="round-body"><div class="round-agent">🔵 BLUE AGENT — ROUND ${round}</div><div class="round-text" id="bt-${round}" style="color:var(--fg3);">Analyzing and generating patch...</div></div></div>`;
+  } else if (phase === "red") {
+    rounds.innerHTML += `<div class="round-block" id="rb-r-${round}"><div class="round-num run" style="border-color:var(--red);color:var(--red);background:var(--rdim);">${round}</div><div class="round-body"><div class="round-agent" style="color:var(--red);">🔴 RED AGENT — ROUND ${round}</div><div class="round-text" id="rt-${round}" style="color:var(--fg3);">Generating exploit payloads...</div></div></div>`;
+  }
+  scrollModal();
+});
+
+socket.on("blue_patch", d => {
+  const el = document.getElementById(`bt-${d.round_num}`);
+  if (el) el.textContent = `${d.root_cause}\nType: ${d.patch_type} · Confidence: ${Math.round(d.confidence*100)}%`;
+  const num = document.querySelector(`#rb-b-${d.round_num} .round-num`);
+  if (num) num.className = "round-num";
+  setTxt("patch-id", `BLUE-${d.round_num}-${d.patch_type.toUpperCase()}`);
+  setTxt("patch-root", d.root_cause);
+  document.getElementById("patch-code").textContent = d.patch_code;
+  setTxt("patch-conf", `${Math.round(d.confidence*100)}% confidence`);
+  document.getElementById("b-gen").textContent = parseInt(document.getElementById("b-gen").textContent)+1;
+});
+
+socket.on("red_result", d => {
+  const el = document.getElementById(`rt-${d.round_num}`);
+  if (el) el.textContent = `Payload: ${d.payload_used}\nTechnique: ${d.technique}\n${d.success?'✗ EXPLOIT SUCCEEDED: '+d.evidence:'✓ BLOCKED — all '+d.payloads_tried+' payloads stopped'}`;
+  const num = document.querySelector(`#rb-r-${d.round_num} .round-num`);
+  if (num) num.className = "round-num";
+  const ts = now();
+  pushRedLog(ts, d.success?"lv-e":"lv-s", d.success?`EXPLOIT CONFIRMED: ${d.technique} — ${d.evidence}`:`All ${d.payloads_tried} payloads BLOCKED`);
+});
+
+socket.on("network_attack", d => {
+  const ts = now();
+  const ok = !d.success;
+  pushNetLog(ts, ok?"lv-s":"lv-e", `[${(d.layer||d.vuln_type||'NET').toUpperCase()}] ${d.technique} — ${d.success?"UNDETECTED ❌":"BLOCKED ✅"} — ${d.evidence||''}`);
+  netTotal++;
+  if (!d.success) netBlocked++;
+  setTxt("sb-netblock", `${netBlocked}/${netTotal}`);
+  // Modal net block
+  const rounds = document.getElementById("m-rounds");
+  if (rounds) {
+    let ph = document.getElementById(`np-${d.round_num}`);
+    if (!ph) {
+      ph = document.createElement("div");
+      ph.id = `np-${d.round_num}`;
+      ph.className = "net-block";
+      ph.innerHTML = `<div class="net-block-hdr">🌐 Network Layer — Round ${d.round_num}</div><div id="np-txt-${d.round_num}" style="font-size:10px;color:var(--fg3);">Running...</div>`;
+      rounds.appendChild(ph);
+    }
+    const txt = document.getElementById(`np-txt-${d.round_num}`);
+    if (txt) txt.innerHTML = `<span style="color:${d.success?'var(--red)':'var(--lime)'};">${d.success?'❌ UNDETECTED':'✅ BLOCKED'}</span> ${esc(d.technique)} — pkts: ${d.stats?.packets_sent||'?'}`;
+  }
+  // Pairing table
+  const pm = {port_scan:'pr-sqli',brute_force:'pr-xss',c2_beacon:'pr-rce',data_exfiltration:'pr-ssrf',traffic_flood:'pr-path'};
+  const pc = document.getElementById(pm[d.vuln_type]);
+  if (pc) pc.innerHTML = `<span style="color:${d.success?'var(--red)':'var(--lime)'};">${d.success?'❌ Undetected':'✅ Blocked'}</span>`;
+  // Status bars
+  const bm = {port_scan:['nb-ps','nv-ps'],brute_force:['nb-bf','nv-bf'],c2_beacon:['nb-c2','nv-c2'],data_exfiltration:['nb-ex','nv-ex'],traffic_flood:['nb-fl','nv-fl']};
+  const bids = bm[d.vuln_type];
+  if (bids) {
+    const f = document.getElementById(bids[0]);
+    if (f) f.style.width = Math.min(100, (d.stats?.packets_sent||0)*2)+'%';
+    const v = document.getElementById(bids[1]);
+    if (v) v.textContent = `${d.stats?.packets_sent||0}p · ${d.stats?.bytes_sent||0}B`;
+  }
+  scrollModal();
+});
+
+socket.on("referee_verdict", d => {
+  const rounds = document.getElementById("m-rounds");
+  if (!rounds) return;
+  const isPass = d.verdict === "PASS";
+  rounds.innerHTML += `<div class="round-block"><div class="round-num ${isPass?'pass':'fail'}">⚖</div><div class="round-body"><div class="round-agent">⚖️ REFEREE — ROUND ${d.round_num}</div><div class="round-verdict ${isPass?'pass':'fail'}">${isPass?"✅ PATCH HOLDS — exploit blocked. Verified.":"❌ EXPLOIT SUCCEEDED — patch failed. Retrying."}</div><div style="font-size:10px;color:var(--fg3);margin-top:3px;">${esc(d.proof_statement)}</div></div></div>`;
+  if (isPass) {
+    setTxt("patch-result", "✅ Re-attack BLOCKED — 0 regressions");
+    document.getElementById("b-val").textContent = parseInt(document.getElementById("b-val").textContent)+1;
+  }
+  scrollModal();
+});
+
+socket.on("battle_complete", d => {
+  const isPass = d.final_verdict === "PASS";
+  const proof = document.getElementById("m-proof");
+  if (proof) {
+    proof.innerHTML = `<div class="proof-box" style="${!isPass?'border-color:var(--red);':''}">\
+<div class="proof-lbl">${isPass?'✅ DATAWATCHDAWGS VERIFIED':'❌ UNVERIFIED'}</div>\
+<div class="proof-text" style="color:${isPass?'var(--lime)':'var(--red)'};">${esc(d.proof_statement)}</div>\
+<div class="proof-sig">HMAC-SHA256: ${d.signature} · ${d.battle_id} · Rounds: ${d.total_rounds}</div></div>`;
+  }
+  if (isPass) { autoFixed++; setTxt("sb-fixed", autoFixed); }
+  setTxt("hd-cyc", d.cycle); setTxt("loop-cyc", d.cycle); setTxt("loop-cyc", d.cycle);
+  auditEntries.unshift({
+    ic:isPass?"✅":"❌",cl:isPass?"ai-g":"ai-r",
+    t:`${isPass?'VERIFIED':'FAILED'}: ${d.cve_name}`,
+    m:`${new Date().toLocaleTimeString()} · ${d.cve_id} · ${d.battle_id}`,
+    h:d.signature.slice(0,12)+"..."
+  });
+  renderAudit();
+  battleRunning = false;
+  const btn = document.getElementById("launch-btn");
+  btn.disabled = false; btn.textContent = "⚔ LAUNCH BATTLE"; btn.classList.remove("running");
+  scrollModal();
+  // Stats
+  fetch('/api/stats').then(r=>r.json()).then(updateStats).catch(()=>{});
+});
+
+socket.on("cycle_update", d => { setTxt("hd-cyc", d.cycle); setTxt("loop-cyc", d.cycle); });
+
+socket.on("battle_error", d => {
+  battleRunning = false;
+  const btn = document.getElementById("launch-btn");
+  btn.disabled = false; btn.textContent = "⚔ LAUNCH BATTLE"; btn.classList.remove("running");
+  alert("Battle error: " + d.msg);
+});
+
+socket.on("waf_verify_complete", d => {
+  if (d.error) { document.getElementById("waf-res").innerHTML=`<div style="color:var(--red);font-size:10px;">Error: ${esc(d.error)}</div>`; return; }
+  const isPass = d.final_verdict==="PASS";
+  const eff = Math.round((d.patch_effectiveness||0)*100);
+  document.getElementById("waf-res").innerHTML = `<div style="border:1px solid ${isPass?'var(--lime3)':'rgba(255,45,85,0.3)'};border-radius:3px;padding:8px 10px;background:${isPass?'var(--ldim)':'var(--rdim)'};">
+    <div style="font-size:11px;color:${isPass?'var(--lime)':'var(--red)'};margin-bottom:3px;">${isPass?"✅ RULE VERIFIED":"❌ RULE BYPASSED"}</div>
+    <div style="font-size:9px;color:var(--fg3);">${eff}% effective · ${d.total_rounds||'?'} rounds${d.signature?` · Sig: ${d.signature.slice(0,12)}...`:''}</div></div>`;
+  pushNetLog(now(), isPass?"lv-s":"lv-e", `[WAF-VERIFY] ${d.attack_type||''} — ${isPass?"VERIFIED":"BYPASSED"} — ${eff}% effective`);
+});
+
+socket.on("soc_training_complete", d => {
+  if (d.error) { document.getElementById("soc-res").innerHTML=`<div style="color:var(--red);font-size:10px;">Error: ${esc(d.error)}</div>`; setTxt("soc-st","Error"); return; }
+  setTxt("soc-st","Done");
+  const sc = d.soc_score||{};
+  const pct = Math.round((sc.score||0)*100);
+  const col = pct>=80?"var(--lime)":pct>=50?"var(--amber)":"var(--red)";
+  document.getElementById("soc-res").innerHTML = `<div style="border:1px solid var(--border2);border-radius:3px;padding:8px 10px;background:var(--ink2);">
+    <div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span style="font-size:10px;">SOC Score</span><span style="font-family:var(--display);font-size:16px;color:${col};">${pct}%</span></div>
+    <div style="height:3px;background:var(--border2);border-radius:2px;margin-bottom:6px;"><div style="height:100%;width:${pct}%;background:${col};border-radius:2px;"></div></div>
+    ${(sc.details||[]).map(x=>`<div style="font-size:9px;color:var(--fg3);margin-bottom:1px;">${esc(x)}</div>`).join('')}</div>`;
+  if (d.exploit) pushNetLog(now(), d.exploit.success?"lv-e":"lv-s", `[SOC] ${d.exploit.vuln_type||''} — score:${pct}%`);
+});
+
+socket.on("red_team_complete", d => {
+  if (d.error) { setTxt("rt-st","Error"); document.getElementById("rt-res").innerHTML=`<div style="color:var(--red);font-size:10px;">Error: ${esc(d.error)}</div>`; return; }
+  const pct = Math.round((d.pass_rate||0)*100);
+  const col = pct===100?"var(--lime)":pct>=60?"var(--amber)":"var(--red)";
+  setTxt("rt-st",`${pct}% pass`);
+  const attacks = Object.keys(d.results||{});
+  document.getElementById("rt-res").innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <span style="font-size:9px;color:var(--fg3);">${esc(d.campaign_id||'')}</span>
+      <span style="font-family:var(--display);font-size:15px;color:${col};">${pct}%</span>
+    </div>
+    <div style="height:2px;background:var(--border2);border-radius:1px;margin-bottom:8px;"><div style="height:100%;width:${pct}%;background:${col};border-radius:1px;"></div></div>
+    ${attacks.map(at=>{const r=d.results[at]||{};const ok=!r.success;return `<div class="rt-row"><div class="rt-ic ${ok?'ai-g':'ai-r'}">${ok?"✅":"❌"}</div><div style="flex:1;font-size:10px;">${at.replace(/_/g,' ')}</div><div style="font-size:9px;color:${ok?'var(--lime)':'var(--red)'};">${ok?"blocked":"undetected"}</div></div>`;}).join('')}
+    <div style="font-size:9px;color:var(--fg3);margin-top:5px;">${d.duration||'?'}s · ${d.detected||0}/${d.total_attacks||0} detected</div>`;
+  attacks.forEach(at=>{const r=d.results[at]||{};pushNetLog(now(),r.success?"lv-e":"lv-s",`[RT] ${at} — ${r.success?"UNDETECTED":"BLOCKED"}`);});
+});
+
+// ── UI FUNCTIONS ──────────────────────────────────────────────────────────
+function switchTab(id, btn) {
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('s-'+id).classList.add('on');
+  btn.classList.add('on');
+}
+function launchBattle() {
+  if (battleRunning) return;
+  socket.emit("launch_battle", {vuln_key: document.getElementById("vsel").value});
+}
+function openModal() { document.getElementById("modal").classList.add("on"); }
+function closeModal() { document.getElementById("modal").classList.remove("on"); }
+function setTxt(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function now(){return new Date().toLocaleTimeString('en',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});}
+function scrollModal(){const m=document.querySelector('.modal');if(m)m.scrollTop=m.scrollHeight;}
+
+function renderOpLog(){
+  const el=document.getElementById("oplog");
+  if(!el)return;
+  el.innerHTML=oplogLines.map(l=>`<div class="log-line"><span class="lt">${l.ts}</span><span class="ll ${l.lv}">[${l.lv==='lv-i'?'INFO':l.lv==='lv-s'?'OK':l.lv==='lv-e'?'ERR':'WARN'}]</span><span class="la ${l.la}">${esc(l.ag)}</span><span class="lm">${esc(l.msg)}</span></div>`).join('');
+  el.scrollTop=el.scrollHeight;
+}
+function renderAgentLog(){
+  const el=document.getElementById("agent-status-log");
+  if(!el)return;
+  el.innerHTML=agentLogLines.map(l=>`<div style="display:flex;gap:6px;padding:2px 0;font-size:10px;border-bottom:1px solid rgba(30,42,30,0.3);"><span style="color:var(--fg3);min-width:52px;">${l.ts}</span><span class="${l.la}" style="min-width:58px;">${esc(l.ag)}</span><span style="color:var(--fg2);">${esc(l.msg)}</span></div>`).join('');
+  el.scrollTop=el.scrollHeight;
+}
+
+let redlogLines=[];
+function pushRedLog(ts,lv,msg){
+  redlogLines.push({ts,lv,msg});
+  if(redlogLines.length>20)redlogLines.shift();
+  const el=document.getElementById("redlog");
+  if(el){el.innerHTML=redlogLines.map(l=>`<div style="display:flex;gap:6px;font-size:10px;"><span style="color:var(--fg3);min-width:52px;">${l.ts}</span><span class="${l.lv}" style="color:${l.lv==='lv-s'?'var(--lime)':'var(--red)'};">${esc(l.msg)}</span></div>`).join('');el.scrollTop=el.scrollHeight;}
+}
+function pushNetLog(ts,lv,msg){
+  netlogLines.push({ts,lv,msg});
+  if(netlogLines.length>30)netlogLines.shift();
+  const el=document.getElementById("netlog");
+  if(el){el.innerHTML=netlogLines.map(l=>`<div style="display:flex;gap:6px;font-size:10px;"><span style="color:var(--fg3);min-width:52px;">${l.ts}</span><span style="color:var(--amber);">${esc(l.msg)}</span></div>`).join('');el.scrollTop=el.scrollHeight;}
+  // Also push to network status log in loop tab
+  const ns=document.getElementById("net-status-log");
+  if(ns){ns.innerHTML=netlogLines.slice(-15).map(l=>`<div style="display:flex;gap:6px;font-size:10px;padding:2px 0;border-bottom:1px solid rgba(30,42,30,0.3);"><span style="color:var(--fg3);min-width:52px;">${l.ts}</span><span style="color:var(--amber);">${esc(l.msg)}</span></div>`).join('');ns.scrollTop=ns.scrollHeight;}
+}
+
+function updateStats(s){
+  setTxt("loop-total",s.total||0);
+  setTxt("loop-pass",s.total?(Math.round(s.pass_rate*100)+'%'):'—');
+  setTxt("loop-cyc",s.cycle||'—');
+  setTxt("hd-cyc",s.cycle||'—');
+  setTxt("loop-docker",s.docker_available?"LIVE":"SIM");
+  if(s.network_layer){
+    const nl=s.network_layer;
+    setTxt("net-summary",nl.enabled?`${nl.blocked||0}/${nl.total_attacks||0} blocked`:'disabled');
+    setTxt("sb-netblock",`${nl.blocked||0}/${nl.total_attacks||0}`);
+  }
+}
+
+function renderArsenal(){
+  const el=document.getElementById("arsenal");
+  if(!el)return;
+  el.innerHTML=TOOLS.map(t=>`<div class="tool-item"><div class="tool-name">${t.n}</div><div class="tool-bar"><div class="tool-fill" style="width:${t.p}%;background:${t.col};"></div></div><div class="tool-count">${t.c}</div></div>`).join('');
+}
+
+function renderFindings(){
+  const el=document.getElementById("findings-body");
+  if(!el)return;
+  const sc={crit:'b-crit',high:'b-high',med:'b-med'};
+  el.innerHTML=FINDINGS.map(f=>`<tr><td><span class="badge ${sc[f.s]||'b-med'}">${f.s.toUpperCase()}</span></td><td><div style="color:var(--fg);font-size:10px;">${f.n}</div><div style="color:var(--fg3);font-size:9px;">${f.cve}</div></td><td style="font-size:9px;color:var(--lime2);font-family:var(--mono);">${f.loc}</td><td style="font-family:var(--display);font-size:13px;color:${f.cvss>=9?'var(--red)':f.cvss>=7?'var(--amber)':'var(--blue)'};">${f.cvss}</td><td><span class="badge ${f.st==='Auto-Fixed'?'b-ok':f.s==='crit'?'b-crit':'b-high'}">${f.st}</span></td><td><button onclick="launchFor('${f.vk}')" style="background:none;border:1px solid var(--border2);color:var(--fg3);padding:3px 8px;border-radius:2px;font-size:9px;cursor:pointer;font-family:var(--mono);">ATTACK ›</button></td></tr>`).join('');
+}
+function launchFor(vk){document.getElementById("vsel").value=vk;launchBattle();}
+
+function renderPolicies(){
+  const el=document.getElementById("pol-list");
+  if(!el)return;
+  el.innerHTML=POLICIES.map(p=>`<div class="pol-row"><div class="pol-info"><div class="pol-name">${p.n}</div><div class="pol-desc">${p.d}</div></div><div class="toggle"></div></div>`).join('');
+}
+
+function renderGovQ(){
+  const el=document.getElementById("gov-queue");
+  if(!el)return;
+  el.innerHTML=GOVQ.map(q=>`<div class="q-grid"><div style="font-size:10px;">${q.f}</div><div><span class="q-pill">${q.a}</span></div><div style="color:${q.r==='critical'?'var(--red)':q.r==='high'?'var(--amber)':'var(--blue)'};">${q.r}</div><div style="font-size:9px;color:var(--fg3);">${q.reason}</div><div style="font-size:9px;color:var(--fg3);">${q.t}</div><div style="display:flex;gap:4px;">${q.s==='pending'?`<button class="q-appbtn" onclick="approveQ(this)">Approve</button><button class="q-rejbtn">Reject</button>`:`<span class="approved-badge">approved</span>`}</div></div>`).join('');
+}
+function approveQ(btn){
+  const row=btn.closest('.q-grid');
+  row.querySelector('div:last-child').innerHTML='<span class="approved-badge">approved</span>';
+  const p=parseInt(document.getElementById('g-pend').textContent);
+  const a=parseInt(document.getElementById('g-app').textContent);
+  document.getElementById('g-pend').textContent=Math.max(0,p-1);
+  document.getElementById('g-app').textContent=a+1;
+  document.getElementById('q-badge').textContent=Math.max(0,p-1)+' pending';
+}
+
+function renderAudit(){
+  const all=[...auditEntries,...AUDIT_SEED];
+  const el=document.getElementById("audit-list");
+  if(!el)return;
+  el.innerHTML=all.slice(0,20).map(a=>`<div class="audit-item"><div class="audit-icon ${a.cl}">${a.ic}</div><div class="audit-body"><div class="audit-title">${esc(a.t)}</div><div class="audit-meta">${esc(a.m)}${a.h?`<span class="audit-hash">SHA256:${a.h}</span>`:''}</div></div></div>`).join('');
+}
+
+function renderResearch(){
+  fetch('/api/cves').then(r=>r.json()).then(cves=>{
+    const el=document.getElementById("res-list");
+    if(!el)return;
+    el.innerHTML=cves.map(c=>`<div style="padding:12px 14px;border:1px solid var(--border);border-radius:4px;margin-bottom:8px;background:var(--ink3);display:flex;justify-content:space-between;align-items:flex-start;gap:16px;"><div style="flex:1;"><div style="font-family:var(--display);font-size:15px;color:var(--fg);letter-spacing:0.03em;margin-bottom:3px;">${esc(c.name)}</div><div style="font-size:9px;color:var(--lime2);margin-bottom:4px;letter-spacing:0.05em;">${c.id}</div><div style="font-size:10px;color:var(--fg3);font-family:var(--body);">${esc(c.desc)}</div></div><div style="text-align:right;flex-shrink:0;"><div style="font-family:var(--display);font-size:24px;color:${c.cvss>=9?'var(--red)':c.cvss>=7?'var(--amber)':'var(--blue)'};">${c.cvss}</div><div style="font-size:8px;color:var(--fg3);letter-spacing:0.1em;">CVSS</div></div></div>`).join('');
+  }).catch(()=>{});
+}
+
+function renderFixQueue(){
+  const fixes=[{n:"SQL Injection fix",l:"users.py:47",v:true,r:3},{n:"XSS sanitization",l:"CommentCard.tsx:23",v:true,r:1},{n:"SSRF URL allowlist",l:"pdf_generator.py:112",v:true,r:2},{n:"Path traversal guard",l:"upload.go:89",v:false,r:1}];
+  const el=document.getElementById("fix-queue");
+  if(!el)return;
+  el.innerHTML=fixes.map(f=>`<div style="padding:8px 0;border-bottom:1px solid rgba(30,42,30,0.5);"><div style="display:flex;align-items:center;gap:6px;font-size:10px;margin-bottom:2px;">${f.v?'<span style="color:var(--lime);">✅</span>':'<span style="color:var(--amber);">⏳</span>'} ${f.n} <span style="font-size:9px;color:var(--fg3);">R${f.r}</span></div><div style="font-size:9px;color:var(--lime2);font-family:var(--mono);">${f.l}</div><div style="font-size:9px;color:${f.v?'var(--lime)':'var(--amber)'};">${f.v?'✓ Re-attack blocked':'⟳ Awaiting validation'}</div></div>`).join('');
+}
+
+// ── USE 3/4/5 ─────────────────────────────────────────────────────────────
+function runSocTraining(){
+  const attack_type=document.getElementById("soc-type").value;
+  const detected=document.getElementById("soc-det").value==="true";
+  const rule=document.getElementById("soc-rule").value;
+  setTxt("soc-st","Running...");
+  document.getElementById("soc-res").innerHTML='<div style="font-size:9px;color:var(--fg3);">⟳ Firing attack — results appear when done...</div>';
+  pushNetLog(now(),"lv-i",`[SOC] Started — ${attack_type}`);
+  fetch('/api/network/soc-training',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({attack_type,soc_response:{detected,rule_proposed:rule,response_time_s:30}})}).catch(e=>{setTxt("soc-st","Error");});
+}
+function runWafVerify(){
+  const attack_type=document.getElementById("waf-type").value;
+  const proposed_rule=document.getElementById("waf-rule").value;
+  document.getElementById("waf-res").innerHTML='<div style="font-size:9px;color:var(--amber);">⟳ Verifying rule...</div>';
+  pushNetLog(now(),"lv-i",`[WAF] Started — ${attack_type}`);
+  fetch('/api/network/firewall-verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({attack_type,proposed_rule})}).catch(()=>{});
+}
+function runRedTeam(){
+  setTxt("rt-st","Running...");
+  document.getElementById("rt-res").innerHTML='<div style="font-size:9px;color:var(--fg3);">⟳ Firing all 5 attacks...</div>';
+  pushNetLog(now(),"lv-i","[RED-TEAM] Campaign started");
+  fetch('/api/network/red-team',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}).catch(()=>{});
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+oplogLines=[...OPLOG_SEED.map(l=>({...l,lv:l.lvc||l.lv,la:l.lac||l.la}))];
+// fix seed format
+oplogLines=OPLOG_SEED;
+
+renderOpLog();
+renderArsenal();
+renderFindings();
+renderPolicies();
+renderGovQ();
+renderAudit();
+renderResearch();
+renderFixQueue();
+
+// Push seed to agent log too
+agentLogLines=[...OPLOG_SEED];
+renderAgentLog();
+
+// Fetch initial stats
+fetch('/api/stats').then(r=>r.json()).then(updateStats).catch(()=>{});
+</script>
+</body>
+</html>

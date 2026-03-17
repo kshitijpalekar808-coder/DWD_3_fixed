@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DataWatchDawgs — ATTACKER CONSOLE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@300;400;500;700&family=DM+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:   #060406;
+  --bg2:  #090609;
+  --surf: #0e0b0e;
+  --s2:   #130f13;
+  --brd:  #261826;
+  --b2:   #331f33;
+  --red:  #ff2244;
+  --rdim: rgba(255,34,68,0.12);
+  --r2:   rgba(255,34,68,0.05);
+  --acid: #b8ff3c;
+  --adim: rgba(184,255,60,0.06);
+  --a2:   #4d7a10;
+  --amber:#ffaa00;
+  --amdim:rgba(255,170,0,0.10);
+  --txt:  #d4b8d4;
+  --txt2: #6a4a6a;
+  --txt3: #3a2a3a;
+  --mono: 'JetBrains Mono', monospace;
+  --disp: 'Bebas Neue', sans-serif;
+  --sans: 'DM Sans', sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;background:var(--bg);font-family:var(--mono);color:var(--txt);}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(255,34,68,0.012) 3px,rgba(255,34,68,0.012) 4px);pointer-events:none;z-index:9999;}
+
+.page{display:flex;flex-direction:column;height:100vh;}
+
+.hdr{height:56px;background:var(--bg2);border-bottom:1px solid var(--brd);display:flex;align-items:center;padding:0 24px;gap:16px;flex-shrink:0;}
+.hdr-logo{font-family:var(--disp);font-size:24px;letter-spacing:.06em;color:var(--red);}
+.hdr-sub{font-size:11px;color:var(--txt2);letter-spacing:.12em;text-transform:uppercase;border-left:1px solid var(--brd);padding-left:16px;}
+.hdr-badge{margin-left:auto;font-size:10px;padding:3px 12px;border:1px solid rgba(255,34,68,.4);border-radius:3px;background:var(--rdim);color:var(--red);letter-spacing:.1em;}
+.target-bar{display:flex;align-items:center;gap:12px;padding:10px 24px;background:var(--bg2);border-bottom:1px solid var(--brd);flex-shrink:0;}
+.tb-label{font-size:10px;color:var(--txt2);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;}
+.tb-input{flex:1;background:var(--surf);border:1px solid var(--b2);border-radius:4px;padding:6px 12px;color:var(--red);font-family:var(--mono);font-size:12px;outline:none;max-width:320px;}
+.tb-input:focus{border-color:rgba(255,34,68,.6);}
+.tb-status{font-size:10px;padding:3px 10px;border-radius:3px;border:1px solid var(--brd);background:var(--s2);color:var(--txt2);}
+.tb-status.ok{border-color:rgba(184,255,60,.3);background:var(--adim);color:var(--acid);}
+.tb-status.err{border-color:rgba(255,34,68,.3);background:var(--rdim);color:var(--red);}
+.ping-btn{background:var(--surf);border:1px solid var(--b2);color:var(--txt2);font-family:var(--mono);font-size:10px;padding:5px 12px;border-radius:3px;cursor:pointer;transition:all .15s;}
+.ping-btn:hover{color:var(--acid);border-color:var(--a2);}
+
+.body{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:0;overflow:hidden;}
+
+/* ─ left: attack panel ─ */
+.atk-panel{border-right:1px solid var(--brd);display:flex;flex-direction:column;overflow:hidden;}
+.ap-hdr{padding:12px 18px;border-bottom:1px solid var(--brd);font-size:9px;color:var(--txt2);text-transform:uppercase;letter-spacing:.12em;display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.ap-hdr-icon{width:8px;height:8px;border-radius:50%;background:var(--red);animation:pp 1.5s infinite;}
+@keyframes pp{0%,100%{opacity:1}50%{opacity:.3}}
+
+.atk-sections{flex:1;overflow-y:auto;padding:14px 18px;display:flex;flex-direction:column;gap:14px;}
+
+.atk-section{background:var(--surf);border:1px solid var(--brd);border-radius:6px;overflow:hidden;}
+.as-hdr{padding:10px 14px;border-bottom:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between;}
+.as-title{font-family:var(--disp);font-size:16px;letter-spacing:.05em;}
+.as-title.r{color:var(--red);}
+.as-title.a{color:var(--amber);}
+.as-sub{font-size:9px;color:var(--txt2);margin-top:1px;}
+.as-body{padding:14px;}
+
+/* vulnerability selector */
+.vuln-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:12px;}
+.vcard{border:1px solid var(--brd);border-radius:4px;padding:9px 11px;cursor:pointer;transition:all .15s;background:var(--s2);}
+.vcard:hover{border-color:rgba(255,34,68,.4);background:var(--rdim);}
+.vcard.selected{border-color:rgba(255,34,68,.7);background:var(--rdim);box-shadow:0 0 8px rgba(255,34,68,.15);}
+.vc-id{font-size:8px;color:var(--txt3);letter-spacing:.08em;margin-bottom:3px;}
+.vc-name{font-size:10px;color:var(--txt);}
+.vc-cvss{font-size:9px;color:var(--red);}
+
+/* launch button */
+.launch-btn{width:100%;padding:12px;font-family:var(--disp);font-size:22px;letter-spacing:.12em;background:linear-gradient(135deg,rgba(255,34,68,.2),rgba(255,34,68,.08));border:1px solid rgba(255,34,68,.5);border-radius:5px;color:var(--red);cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+.launch-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,34,68,.15),transparent);transform:translateX(-100%);transition:transform .3s;}
+.launch-btn:hover::before{transform:translateX(0);}
+.launch-btn:hover{border-color:var(--red);box-shadow:0 0 20px rgba(255,34,68,.2);}
+.launch-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+/* network section */
+.net-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px;}
+.ncard{border:1px solid var(--brd);border-radius:4px;padding:8px 6px;cursor:pointer;transition:all .15s;background:var(--s2);text-align:center;}
+.ncard:hover{border-color:rgba(255,170,0,.4);background:var(--amdim);}
+.ncard.selected{border-color:var(--amber);background:var(--amdim);}
+.nc-icon{font-size:14px;margin-bottom:3px;}
+.nc-name{font-size:8px;color:var(--txt2);}
+
+.fire-btn{width:100%;padding:10px;font-family:var(--disp);font-size:18px;letter-spacing:.1em;background:rgba(255,170,0,.1);border:1px solid rgba(255,170,0,.4);border-radius:4px;color:var(--amber);cursor:pointer;transition:all .2s;}
+.fire-btn:hover{background:rgba(255,170,0,.18);box-shadow:0 0 16px rgba(255,170,0,.15);}
+.fire-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+.campaign-btn{width:100%;padding:11px;font-family:var(--disp);font-size:18px;letter-spacing:.1em;background:rgba(184,255,60,.06);border:1px solid var(--a2);border-radius:4px;color:var(--acid);cursor:pointer;transition:all .2s;margin-top:8px;}
+.campaign-btn:hover{background:rgba(184,255,60,.12);box-shadow:0 0 14px rgba(184,255,60,.1);}
+.campaign-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+/* ─ right: terminal ─ */
+.term-panel{display:flex;flex-direction:column;overflow:hidden;}
+.tp-hdr{padding:12px 18px;border-bottom:1px solid var(--brd);font-size:9px;color:var(--txt2);text-transform:uppercase;letter-spacing:.12em;display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.tp-dots{display:flex;gap:5px;}
+.dot{width:10px;height:10px;border-radius:50%;}
+.dr{background:#ff5f57;}.da{background:#febc2e;}.dg{background:#28c840;}
+.term-body{flex:1;overflow-y:auto;padding:12px 14px;background:var(--bg);}
+.tl{display:flex;gap:8px;padding:3px 0;font-size:11px;line-height:1.5;animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(2px)}to{opacity:1;transform:none}}
+.tl-ts{color:var(--txt3);min-width:52px;flex-shrink:0;}
+.tl-lv{min-width:60px;flex-shrink:0;}
+.tl-msg{word-break:break-all;}
+.lv-info{color:var(--txt2);}
+.lv-error{color:var(--red);}
+.lv-success{color:var(--acid);}
+.lv-warn{color:var(--amber);}
+
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--brd);border-radius:2px;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="hdr">
+    <div class="hdr-logo">RED CONSOLE</div>
+    <div class="hdr-sub">DataWatchDawgs — Attacker Laptop</div>
+    <div class="hdr-badge">⚔ ATTACK MODE</div>
+  </div>
+
+  <!-- TARGET BAR -->
+  <div class="target-bar">
+    <div class="tb-label">Target (Defender IP)</div>
+    <input class="tb-input" id="target-ip" value="localhost" placeholder="10.145.32.X or localhost">
+    <button class="ping-btn" onclick="pingTarget()">⟳ Ping</button>
+    <button class="ping-btn" onclick="unblockAll()" style="color:var(--amber);border-color:rgba(255,170,0,.4);">🔓 Unblock All IPs</button>
+    <div class="tb-status" id="target-status">Not tested</div>
+    <div style="font-size:10px;color:var(--txt2);margin-left:8px;">Judges view: <span style="color:var(--acid);font-family:var(--mono);" id="judges-link">—</span></div>
+  </div>
+
+  <!-- BODY -->
+  <div class="body">
+
+    <!-- LEFT: Attack controls -->
+    <div class="atk-panel">
+      <div class="ap-hdr">
+        <div class="ap-hdr-icon"></div>
+        Attack Control Center
+      </div>
+      <div class="atk-sections">
+
+        <!-- App-layer battles -->
+        <div class="atk-section">
+          <div class="as-hdr">
+            <div>
+              <div class="as-title r">APP LAYER ATTACK</div>
+              <div class="as-sub">Full dual-layer battle — Red Agent + Network Agent fired simultaneously</div>
+            </div>
+          </div>
+          <div class="as-body">
+            <div class="vuln-grid">
+              <div class="vcard selected" onclick="selectVuln('sqli',this)">
+                <div class="vc-id">CVE-2026-1234</div>
+                <div class="vc-name">SQL Injection</div>
+                <div class="vc-cvss">CVSS 9.8 — Critical</div>
+              </div>
+              <div class="vcard" onclick="selectVuln('xss',this)">
+                <div class="vc-id">CVE-2026-2345</div>
+                <div class="vc-name">Stored XSS</div>
+                <div class="vc-cvss">CVSS 7.5 — High</div>
+              </div>
+              <div class="vcard" onclick="selectVuln('rce',this)">
+                <div class="vc-id">CVE-2021-44228</div>
+                <div class="vc-name">Log4Shell RCE</div>
+                <div class="vc-cvss">CVSS 10.0 — Critical</div>
+              </div>
+              <div class="vcard" onclick="selectVuln('ssrf',this)">
+                <div class="vc-id">CVE-2026-3456</div>
+                <div class="vc-name">SSRF</div>
+                <div class="vc-cvss">CVSS 9.1 — Critical</div>
+              </div>
+              <div class="vcard" onclick="selectVuln('path',this)">
+                <div class="vc-id">CVE-2026-4567</div>
+                <div class="vc-name">Path Traversal</div>
+                <div class="vc-cvss">CVSS 8.2 — High</div>
+              </div>
+            </div>
+            <button class="launch-btn" id="launch-btn" onclick="launchBattle()">
+              ⚔ LAUNCH BATTLE
+            </button>
+            <div style="font-size:9px;color:var(--txt2);margin-top:6px;text-align:center;" id="launch-status">Select a vulnerability above and fire</div>
+          </div>
+        </div>
+
+        <!-- Network-only attacks -->
+        <div class="atk-section">
+          <div class="as-hdr">
+            <div>
+              <div class="as-title a">NETWORK LAYER ATTACK</div>
+              <div class="as-sub">Standalone network attack — port scan, brute force, C2, exfil, flood</div>
+            </div>
+          </div>
+          <div class="as-body">
+            <div class="net-grid">
+              <div class="ncard selected" onclick="selectNet('net_port_scan',this)">
+                <div class="nc-icon">🔍</div>
+                <div class="nc-name">Port Scan</div>
+              </div>
+              <div class="ncard" onclick="selectNet('net_brute_force',this)">
+                <div class="nc-icon">🔑</div>
+                <div class="nc-name">Brute Force</div>
+              </div>
+              <div class="ncard" onclick="selectNet('net_c2_beacon',this)">
+                <div class="nc-icon">📡</div>
+                <div class="nc-name">C2 Beacon</div>
+              </div>
+              <div class="ncard" onclick="selectNet('net_data_exfil',this)">
+                <div class="nc-icon">📤</div>
+                <div class="nc-name">Data Exfil</div>
+              </div>
+              <div class="ncard" onclick="selectNet('net_traffic_flood',this)">
+                <div class="nc-icon">🌊</div>
+                <div class="nc-name">Flood</div>
+              </div>
+            </div>
+            <button class="fire-btn" id="net-btn" onclick="launchNetAttack()">
+              📡 FIRE NETWORK ATTACK
+            </button>
+            <button class="campaign-btn" id="campaign-btn" onclick="launchCampaign()">
+              🔴 FULL RED TEAM CAMPAIGN (ALL 5)
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RIGHT: Terminal -->
+    <div class="term-panel">
+      <div class="tp-hdr">
+        <div class="tp-dots"><div class="dot dr"></div><div class="dot da"></div><div class="dot dg"></div></div>
+        <span>ATTACKER TERMINAL</span>
+        <div style="margin-left:auto;font-size:9px;color:var(--red);border:1px solid rgba(255,34,68,.3);padding:1px 6px;border-radius:2px;animation:pp 2s infinite;">LIVE</div>
+      </div>
+      <div class="term-body" id="terminal"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script>
+// Connect to the DEFENDER machine
+// URL is the defender's address — adjust if cross-machine
+const targetIP = new URLSearchParams(location.search).get('target') || location.hostname;
+const targetPort = new URLSearchParams(location.search).get('port') || '5000';
+const DEFENDER_URL = `http://${targetIP}:${targetPort}`;
+
+// Update judges link
+document.getElementById('judges-link').textContent = `${DEFENDER_URL}/judges`;
+document.getElementById('target-ip').value = targetIP;
+
+// Connect socket to defender
+const socket = io(DEFENDER_URL, {transports:['websocket','polling']});
+
+let selectedVuln = 'sqli';
+let selectedNet  = 'net_port_scan';
+let running = false;
+
+const terminal = document.getElementById('terminal');
+
+function log(msg, cls='lv-info') {
+  const ts = new Date().toLocaleTimeString('en',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const d = document.createElement('div');
+  d.className = 'tl';
+  d.innerHTML = `<span class="tl-ts">${ts}</span><span class="tl-lv ${cls}">[${cls.replace('lv-','').toUpperCase()}]</span><span class="tl-msg ${cls}">${msg}</span>`;
+  terminal.appendChild(d);
+  terminal.scrollTop = terminal.scrollHeight;
+}
+
+function pingTarget() {
+  const ip = document.getElementById('target-ip').value.trim();
+  document.getElementById('target-status').textContent = 'Pinging...';
+  document.getElementById('target-status').className = 'tb-status';
+  log(`Pinging ${ip}:${targetPort}...`);
+  fetch(`http://${ip}:${targetPort}/api/stats`, {signal: AbortSignal.timeout(4000)})
+    .then(r=>r.json())
+    .then(d=>{
+      document.getElementById('target-status').textContent = '✓ ONLINE';
+      document.getElementById('target-status').className = 'tb-status ok';
+      log(`Target online — cycle ${d.cycle}`, 'lv-success');
+    })
+    .catch(e=>{
+      document.getElementById('target-status').textContent = '✗ OFFLINE';
+      document.getElementById('target-status').className = 'tb-status err';
+      log(`Target unreachable: ${e.message}`, 'lv-error');
+    });
+}
+
+function selectVuln(key, el) {
+  selectedVuln = key;
+  document.querySelectorAll('.vcard').forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function selectNet(key, el) {
+  selectedNet = key;
+  document.querySelectorAll('.ncard').forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function getTarget() {
+  return document.getElementById('target-ip').value.trim() || targetIP;
+}
+
+function launchBattle() {
+  if(running) { log('Battle already running — wait for it to complete','lv-warn'); return; }
+  running = true;
+  const btn = document.getElementById('launch-btn');
+  btn.disabled = true;
+  btn.textContent = '⟳ BATTLE IN PROGRESS...';
+  document.getElementById('launch-status').textContent = `Attacking ${selectedVuln.toUpperCase()} on ${getTarget()}:${targetPort}`;
+  log(`Launching battle: ${selectedVuln.toUpperCase()} → ${getTarget()}:${targetPort}`, 'lv-warn');
+  socket.emit('launch_battle', {vuln_key: selectedVuln});
+}
+
+function launchNetAttack() {
+  if(running) { log('Attack already running','lv-warn'); return; }
+  running = true;
+  const btn = document.getElementById('net-btn');
+  btn.disabled = true;
+  btn.textContent = '⟳ FIRING...';
+  log(`Firing network attack: ${selectedNet} → ${getTarget()}:${targetPort}`, 'lv-warn');
+  socket.emit('launch_battle', {vuln_key: selectedNet});
+}
+
+function launchCampaign() {
+  if(running) { log('Attack already running','lv-warn'); return; }
+  running = true;
+  const btn = document.getElementById('campaign-btn');
+  btn.disabled = true;
+  btn.textContent = '⟳ CAMPAIGN RUNNING...';
+  log(`Launching full red team campaign → ${getTarget()}:${targetPort}`, 'lv-error');
+  fetch(`${DEFENDER_URL}/api/network/red-team`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({target_url: `http://${getTarget()}:${targetPort}`})
+  }).catch(e=>log(`Campaign error: ${e.message}`,'lv-error'));
+}
+
+// Socket listeners
+socket.on('connect', ()=>{
+  log(`Connected to defender at ${DEFENDER_URL}`, 'lv-success');
+  document.getElementById('target-status').textContent = '✓ ONLINE';
+  document.getElementById('target-status').className = 'tb-status ok';
+});
+socket.on('disconnect', ()=>{
+  log('Disconnected from defender','lv-error');
+  document.getElementById('target-status').textContent = '✗ OFFLINE';
+  document.getElementById('target-status').className = 'tb-status err';
+});
+socket.on('battle_start', d=>{
+  log(`Battle started — ${d.cve_id} | ${d.battle_id}`, 'lv-warn');
+});
+socket.on('round_phase', d=>{
+  if(d.phase==='red') log(`Round ${d.round} — Red Agent attacking...`,'lv-warn');
+  if(d.phase==='blue') log(`Round ${d.round} — Blue Agent patching...`);
+});
+socket.on('red_result', d=>{
+  if(d.success) log(`EXPLOIT CONFIRMED: ${d.technique} | ${d.payload_used}`,'lv-error');
+  else log(`Blocked — all ${d.payloads_tried} payloads stopped`,'lv-success');
+});
+socket.on('network_attack', d=>{
+  log(`[NET] ${d.vuln_type} — ${d.success?'UNDETECTED ❌':'BLOCKED ✅'}`,'lv-warn');
+});
+socket.on('battle_complete', d=>{
+  running = false;
+  const isPass = d.final_verdict==='PASS';
+  const btn = document.getElementById('launch-btn');
+  btn.disabled = false;
+  btn.textContent = '⚔ LAUNCH BATTLE';
+  document.getElementById('net-btn').disabled = false;
+  document.getElementById('net-btn').textContent = '📡 FIRE NETWORK ATTACK';
+  document.getElementById('campaign-btn').disabled = false;
+  document.getElementById('campaign-btn').textContent = '🔴 FULL RED TEAM CAMPAIGN (ALL 5)';
+  document.getElementById('launch-status').textContent = `Last: ${isPass?'VERIFIED ✓':'UNVERIFIED ✗'} — ${d.total_rounds} rounds`;
+  log(`Battle complete — ${d.final_verdict} | Rounds: ${d.total_rounds} | ${d.battle_id}`,
+    isPass?'lv-success':'lv-error');
+});
+socket.on('red_team_complete', d=>{
+  running = false;
+  document.getElementById('campaign-btn').disabled = false;
+  document.getElementById('campaign-btn').textContent = '🔴 FULL RED TEAM CAMPAIGN (ALL 5)';
+  log(`Campaign complete — ${Math.round((d.pass_rate||0)*100)}% detection rate`, 'lv-success');
+});
+socket.on('battle_error', d=>{
+  running = false;
+  log(`Error: ${d.msg}`,'lv-error');
+  document.getElementById('launch-btn').disabled = false;
+  document.getElementById('launch-btn').textContent = '⚔ LAUNCH BATTLE';
+  document.getElementById('net-btn').disabled = false;
+  document.getElementById('net-btn').textContent = '📡 FIRE NETWORK ATTACK';
+  document.getElementById('campaign-btn').disabled = false;
+  document.getElementById('campaign-btn').textContent = '🔴 FULL RED TEAM CAMPAIGN (ALL 5)';
+});
+
+// Auto-ping on load
+setTimeout(pingTarget, 500);
+
+function unblockAll() {
+  const ip = document.getElementById('target-ip').value.trim() || targetIP;
+  fetch(`http://${ip}:${targetPort}/api/sentinel/unblock-all`, {method:'POST'})
+    .then(r=>r.json())
+    .then(d=>log(`Unblocked: ${d.message || d.error}`, d.error ? 'lv-error' : 'lv-success'))
+    .catch(e=>log(`Unblock failed: ${e.message}`, 'lv-error'));
+}
+</script>
+</body>
+</html>

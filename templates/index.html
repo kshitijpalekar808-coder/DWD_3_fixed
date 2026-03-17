@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataWatchDawgs — Autonomous AI Red/Blue Team Security Platform</title>
+    <meta name="description"
+        content="DataWatchDawgs is an autonomous AI red/blue team security platform providing real-time threat detection, offensive exploitation, and autonomous defense.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap"
+        rel="stylesheet">
+    <style>
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+        html{scroll-behavior:smooth;}
+        body{background:#000;color:#fff;font-family:'Share Tech Mono',monospace;overflow-x:hidden;min-height:100vh;}
+        ::-webkit-scrollbar{width:6px;}
+        ::-webkit-scrollbar-track{background:#000;}
+        ::-webkit-scrollbar-thumb{background:rgba(0,255,136,0.3);border-radius:3px;}
+        a{text-decoration:none;color:inherit;}
+        body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,transparent 0px,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);}
+        .font-orbitron{font-family:'Orbitron',sans-serif;}
+        .font-mono{font-family:'Share Tech Mono',monospace;}
+
+        /* NAVBAR */
+        #navbar{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:60px;background:rgba(0,0,0,0.85);border-bottom:1px solid rgba(0,255,136,0.25);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);}
+        .nav-logo{display:flex;flex-direction:row;align-items:center;gap:10px;}.nav-logo-img{width:40px;height:40px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(0,255,136,0.5);}
+        .nav-logo-name{font-family:'Orbitron',sans-serif;font-weight:700;font-size:15px;color:#00ff88;letter-spacing:3px;}
+        .nav-logo-sub{font-family:'Share Tech Mono',monospace;font-size:10px;color:rgba(0,255,136,0.45);letter-spacing:1px;}
+        .nav-links{display:flex;gap:22px;align-items:center;}
+        .nav-links a{font-family:'Share Tech Mono',monospace;font-size:12px;color:rgba(0,255,136,0.4);letter-spacing:2px;transition:color .25s,text-shadow .25s;}
+        .nav-links a:hover{color:#00ff88;text-shadow:0 0 12px rgba(0,255,136,0.5);}
+        .nav-live{display:flex;align-items:center;gap:10px;}
+        .nav-live-dot{width:8px;height:8px;border-radius:50%;background:#ff3333;animation:pulse-dot 1.2s ease-in-out infinite;}
+        .nav-live-text{font-family:'Share Tech Mono',monospace;font-size:11px;color:rgba(0,255,136,0.6);letter-spacing:2px;}
+        @keyframes pulse-dot{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(0.7);opacity:0.4;}}
+
+        /* HERO */
+        #hero{position:relative;width:100%;height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+        #globe-container{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;}
+        #globe-container canvas{display:block;}
+        .hero-content{position:relative;z-index:2;pointer-events:none;text-align:center;max-width:720px;padding:0 20px;}
+        .hero-eyebrow{font-family:'Share Tech Mono',monospace;font-size:11px;color:#00ccff;letter-spacing:5px;margin-bottom:18px;}
+        .hero-title{font-family:'Orbitron',sans-serif;font-weight:900;font-size:68px;line-height:1.08;margin-bottom:20px;color:#fff;}
+        .hero-title .accent{color:#00ff88;}
+        .hero-title .slash{color:rgba(255,255,255,0.25);}
+        .hero-sub{font-family:'Share Tech Mono',monospace;font-size:17px;color:rgba(255,255,255,0.55);max-width:520px;margin:0 auto 32px;line-height:1.6;}
+        .hero-ctas{display:flex;gap:16px;justify-content:center;pointer-events:all;}
+        .btn-primary{font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;padding:14px 32px;background:#00ff88;color:#000;border:none;clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);cursor:pointer;letter-spacing:2px;transition:background .2s,box-shadow .2s;}
+        .btn-primary:hover{background:#33ffaa;box-shadow:0 0 24px rgba(0,255,136,0.4);}
+        .btn-ghost{font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;padding:14px 32px;background:transparent;color:#00ff88;border:1px solid #00ff88;clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);cursor:pointer;letter-spacing:2px;transition:background .2s,box-shadow .2s;}
+        .btn-ghost:hover{background:rgba(0,255,136,0.08);box-shadow:0 0 24px rgba(0,255,136,0.2);}
+
+        /* STATS BAR */
+        #stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;background:rgba(0,255,136,0.25);}
+        .stat-card{background:#040d0a;padding:32px 24px;text-align:center;border-bottom:2px solid transparent;transition:border-color .3s;}
+        .stat-card:hover{border-bottom-color:#00ff88;}
+        .stat-number{font-family:'Orbitron',sans-serif;font-size:36px;font-weight:700;margin-bottom:6px;}
+        .stat-number.green{color:#00ff88;}
+        .stat-number.red{color:#ff3333;}
+        .stat-number.yellow{color:#ffdd00;}
+        .stat-number.cyan{color:#00ccff;}
+        .stat-label{font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(0,255,136,0.45);}
+
+        /* SECTION */
+        .section-tag{font-family:'Share Tech Mono',monospace;font-size:11px;color:#00ccff;letter-spacing:4px;margin-bottom:10px;}
+        .section-title{font-family:'Orbitron',sans-serif;font-size:28px;font-weight:700;color:#fff;margin-bottom:36px;}
+
+        /* FEATURES */
+        #features{padding:72px 48px;}
+        .features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:rgba(0,255,136,0.25);}
+        .feature-cell{background:#040d0a;padding:32px 28px;position:relative;overflow:hidden;transition:background .3s;}
+        .feature-cell::before{content:'';position:absolute;left:0;top:50%;width:3px;height:0;background:#00ff88;transition:height .35s,top .35s;}
+        .feature-cell:hover{background:#071a10;}
+        .feature-cell:hover::before{height:100%;top:0;}
+        .feature-icon{font-size:28px;margin-bottom:14px;display:block;}
+        .feature-name{font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;color:#00ff88;letter-spacing:2px;margin-bottom:8px;}
+        .feature-desc{font-family:'Share Tech Mono',monospace;font-size:13px;color:rgba(0,255,136,0.45);line-height:1.6;}
+
+        /* THREATS */
+        #threats{background:#040d0a;border-top:1px solid rgba(0,255,136,0.15);border-bottom:1px solid rgba(0,255,136,0.15);padding:72px 48px;}
+        .threats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;background:rgba(0,255,136,0.25);}
+        .threat-pill{background:#0a0a0a;padding:28px 16px;text-align:center;transition:background .3s;}
+        .threat-pill:hover{background:#0f1a14;}
+        .threat-count{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:700;margin-bottom:6px;}
+        .threat-count.red{color:#ff3333;}
+        .threat-count.green{color:#00ff88;}
+        .threat-label{font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:rgba(0,255,136,0.45);}
+
+        /* AGENTS */
+        #agents{padding:72px 48px;}
+        .agents-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;}
+        .agent-card{border:1px solid rgba(0,255,136,0.25);padding:36px 32px;background:#040d0a;transition:border-color .3s,box-shadow .3s;}
+        .agent-card:hover{border-color:#00ff88;box-shadow:0 0 30px rgba(0,255,136,0.08);}
+        .agent-header{display:flex;align-items:center;gap:12px;margin-bottom:6px;}
+        .agent-dot{width:10px;height:10px;border-radius:50%;animation:pulse-dot 1.2s ease-in-out infinite;}
+        .agent-dot.red{background:#ff3333;}
+        .agent-dot.cyan{background:#00ccff;}
+        .agent-name{font-family:'Orbitron',sans-serif;font-size:18px;font-weight:700;color:#fff;}
+        .agent-subtitle{font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:rgba(0,255,136,0.5);margin-bottom:14px;}
+        .agent-desc{font-family:'Share Tech Mono',monospace;font-size:13px;color:rgba(255,255,255,0.45);line-height:1.7;margin-bottom:18px;}
+        .agent-tags{display:flex;flex-wrap:wrap;gap:8px;}
+        .agent-tag{font-family:'Share Tech Mono',monospace;font-size:10px;padding:5px 10px;border:1px solid rgba(0,255,136,0.25);color:rgba(0,255,136,0.6);letter-spacing:1px;}
+
+        /* TICKER */
+        #ticker{position:fixed;bottom:0;left:0;right:0;z-index:100;background:rgba(0,0,0,0.92);border-top:1px solid rgba(0,255,136,0.25);height:36px;display:flex;align-items:center;overflow:hidden;}
+        .ticker-label{flex-shrink:0;padding:0 16px;font-family:'Share Tech Mono',monospace;font-size:11px;color:#ff3333;letter-spacing:2px;border-right:1px solid rgba(0,255,136,0.2);height:100%;display:flex;align-items:center;white-space:nowrap;}
+        .ticker-scroll{flex:1;overflow:hidden;position:relative;height:100%;}
+        .ticker-track{display:flex;align-items:center;height:100%;animation:ticker-scroll 30s linear infinite;white-space:nowrap;}
+        .ticker-item{flex-shrink:0;padding:0 28px;font-family:'Share Tech Mono',monospace;font-size:11px;color:rgba(0,255,136,0.5);letter-spacing:1px;}
+        .ticker-item .crit{color:#ff3333;}
+        .ticker-item .high{color:#ffdd00;}
+        .ticker-item .med{color:#00ccff;}
+        @keyframes ticker-scroll{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+
+        .footer-spacer{height:44px;}
+
+        @media(max-width:1024px){
+            .hero-title{font-size:42px;}
+            .features-grid{grid-template-columns:repeat(2,1fr);}
+            .threats-grid{grid-template-columns:repeat(3,1fr);}
+            .agents-grid{grid-template-columns:1fr;}
+            .nav-links{display:none;}
+        }
+        @media(max-width:600px){
+            .hero-title{font-size:28px;}
+            .stat-number{font-size:24px;}
+            #stats-bar{grid-template-columns:repeat(2,1fr);}
+            .features-grid{grid-template-columns:1fr;}
+            .threats-grid{grid-template-columns:repeat(2,1fr);}
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav id="navbar">
+        <div class="nav-logo">
+            <img class="nav-logo-img" src="assets/Gemini_Generated_Image_qfygpxqfygpxqfyg (2).png" alt="">
+            <span class="nav-logo-name">DATAWATCHDAWGS</span>
+        </div>
+        <div class="nav-links">
+            <a href="/dashboard">LOOP</a>
+            <a href="/dashboard">RESEARCH</a>
+            <a href="/attacker">RED AGENT</a>
+            <a href="/sentinel">BLUE AGENT</a>
+            <a href="/judges">GOVERNANCE</a>
+            <a href="/judges">AUDIT</a>
+            <a href="/dashboard">NETWORK LAYER</a>
+        </div>
+        <div class="nav-live">
+            <div class="nav-live-dot"></div>
+            <span class="nav-live-text">SYSTEM LIVE · CYCLE 156</span>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section id="hero">
+        <div id="globe-container"></div>
+        <div class="hero-content">
+            <p class="hero-eyebrow">// REAL-TIME AUTONOMOUS DEFENSE PLATFORM</p>
+            <h1 class="hero-title">
+                SENTINEL<span class="accent">AI</span> <span class="slash">/</span> WATCHES. <span class="slash">/</span> ATTACKS. <span class="slash">/</span> DEFENDS.
+            </h1>
+            <p class="hero-sub">
+                Autonomous red/blue team agents that continuously probe, exploit, and patch your infrastructure — before adversaries strike.
+            </p>
+            <div class="hero-ctas">
+                <a href="/dashboard"><button class="btn-primary">LAUNCH BATTLE</button></a>
+                <a href="/judges"><button class="btn-ghost">VIEW DEMO</button></a>
+            </div>
+        </div>
+    </section>
+
+    <!-- STATS BAR -->
+    <section id="stats-bar">
+        <div class="stat-card"><div class="stat-number green" id="stat-attacks">0</div><div class="stat-label">Attacks Detected Today</div></div>
+        <div class="stat-card"><div class="stat-number red" id="stat-cves">0</div><div class="stat-label">Critical CVEs</div></div>
+        <div class="stat-card"><div class="stat-number yellow" id="stat-patches">0</div><div class="stat-label">Auto-Patches Generated</div></div>
+        <div class="stat-card"><div class="stat-number cyan" id="stat-uptime">99.9</div><div class="stat-label">Uptime %</div></div>
+    </section>
+
+    <!-- FEATURES GRID -->
+    <section id="features">
+        <p class="section-tag">// CAPABILITIES</p>
+        <h2 class="section-title">Core Platform Modules</h2>
+        <div class="features-grid">
+            <div class="feature-cell"><span class="feature-icon">🔴</span><div class="feature-name">RED AGENT</div><div class="feature-desc">Offensive exploitation engine that autonomously discovers and chains CVEs to breach target systems using SAST, DAST, and fuzzing.</div></div>
+            <div class="feature-cell"><span class="feature-icon">🔵</span><div class="feature-name">BLUE AGENT</div><div class="feature-desc">Defensive AI that generates real-time patches, deploys WAF rules, and maintains digital twin regression suites for hardened infrastructure.</div></div>
+            <div class="feature-cell"><span class="feature-icon">🌐</span><div class="feature-name">NETWORK LAYER</div><div class="feature-desc">Deep-packet analysis across L3-L7, port scanning, C2 beacon detection, traffic flood mitigation, and exfiltration monitoring.</div></div>
+            <div class="feature-cell"><span class="feature-icon">📋</span><div class="feature-name">AUDIT & DOCS</div><div class="feature-desc">Tamper-proof HMAC-chained audit logs, compliance reporting, and auto-generated documentation for every attack/defense cycle.</div></div>
+            <div class="feature-cell"><span class="feature-icon">⚖️</span><div class="feature-name">GOVERNANCE</div><div class="feature-desc">AI judge panel evaluates agent actions, enforces engagement rules, and scores red/blue performance across MITRE ATT&CK TTPs.</div></div>
+            <div class="feature-cell"><span class="feature-icon">🔬</span><div class="feature-name">RESEARCH LOOP</div><div class="feature-desc">Continuous NVD/CVE feed sync, threat intelligence enrichment, and adversary technique research powering adaptive exploits.</div></div>
+        </div>
+    </section>
+
+    <!-- THREAT COVERAGE -->
+    <section id="threats">
+        <p class="section-tag">// THREAT COVERAGE</p>
+        <h2 class="section-title">Active Threat Monitoring</h2>
+        <div class="threats-grid" id="threats-grid"></div>
+    </section>
+
+    <!-- AGENT CARDS -->
+    <section id="agents">
+        <p class="section-tag">// AUTONOMOUS AGENTS</p>
+        <h2 class="section-title">Meet the Agents</h2>
+        <div class="agents-grid">
+            <div class="agent-card">
+                <div class="agent-header"><div class="agent-dot red"></div><div class="agent-name">RED AGENT</div></div>
+                <div class="agent-subtitle">OFFENSIVE EXPLOITATION ENGINE</div>
+                <div class="agent-desc">Autonomously scans, fingerprints, and exploits vulnerabilities across your stack. Chains multi-stage attacks using real CVEs, generates proof-of-concept payloads, and reports actionable findings — all within controlled engagement rules.</div>
+                <div class="agent-tags"><span class="agent-tag">SAST ×12</span><span class="agent-tag">DAST ×8</span><span class="agent-tag">EXPLOIT ×35</span><span class="agent-tag">NETWORK ×8</span><span class="agent-tag">CLOUD ×14</span><span class="agent-tag">FUZZING ×4</span></div>
+            </div>
+            <div class="agent-card">
+                <div class="agent-header"><div class="agent-dot cyan"></div><div class="agent-name">BLUE AGENT</div></div>
+                <div class="agent-subtitle">AUTONOMOUS DEFENSE & HARDENING</div>
+                <div class="agent-desc">Generates real-time patches, deploys firewall rules, builds digital twin environments, and runs regression suites. Monitors for configuration drift, maintains SBOM integrity, and auto-remediates before attackers can leverage exposed surfaces.</div>
+                <div class="agent-tags"><span class="agent-tag">PATCH ×47</span><span class="agent-tag">WAF ×12</span><span class="agent-tag">SBOM ×6</span><span class="agent-tag">MONITOR ×18</span><span class="agent-tag">HARDEN ×9</span><span class="agent-tag">RESTORE ×3</span></div>
+            </div>
+        </div>
+    </section>
+
+    <div class="footer-spacer"></div>
+
+    <!-- BOTTOM TICKER -->
+    <div id="ticker">
+        <div class="ticker-label">⚡ LIVE THREATS</div>
+        <div class="ticker-scroll">
+            <div class="ticker-track" id="ticker-track"></div>
+        </div>
+    </div>
+
+    <!-- Three.js for realistic Earth -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script>
+    /* ═══════════════════════════════════════════════════════════
+       REALISTIC EARTH GLOBE using Three.js
+       ═══════════════════════════════════════════════════════════ */
+    (function () {
+        const container = document.getElementById('globe-container');
+
+        // Scene setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, container.offsetWidth / container.offsetHeight, 0.1, 1000);
+        camera.position.z = 2.5;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(container.offsetWidth, container.offsetHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setClearColor(0x000000, 0);
+        container.appendChild(renderer.domElement);
+
+        // Resize handler
+        window.addEventListener('resize', () => {
+            camera.aspect = container.offsetWidth / container.offsetHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.offsetWidth, container.offsetHeight);
+        });
+
+        // Ambient + directional light (sun-like)
+        const ambientLight = new THREE.AmbientLight(0x333344, 1.2);
+        scene.add(ambientLight);
+
+        const sunLight = new THREE.DirectionalLight(0xffeedd, 2.2);
+        sunLight.position.set(5, 3, 5);
+        scene.add(sunLight);
+
+        // Subtle blue rim light from the dark side
+        const rimLight = new THREE.DirectionalLight(0x1a3a6e, 1.0);
+        rimLight.position.set(-5, -2, -3);
+        scene.add(rimLight);
+
+        // ── Draw Earth texture onto an offscreen canvas ──
+        // We'll procedurally generate a realistic Earth-like texture
+        const TEX_W = 2048, TEX_H = 1024;
+        const texCanvas = document.createElement('canvas');
+        texCanvas.width = TEX_W;
+        texCanvas.height = TEX_H;
+        const tc = texCanvas.getContext('2d');
+
+        // Ocean base - deep blue gradient
+        const oceanGrad = tc.createLinearGradient(0, 0, 0, TEX_H);
+        oceanGrad.addColorStop(0.0, '#0a1a4a');
+        oceanGrad.addColorStop(0.15, '#0d2255');
+        oceanGrad.addColorStop(0.35, '#0f3068');
+        oceanGrad.addColorStop(0.5, '#103578');
+        oceanGrad.addColorStop(0.65, '#0f3068');
+        oceanGrad.addColorStop(0.85, '#0d2255');
+        oceanGrad.addColorStop(1.0, '#0a1a4a');
+        tc.fillStyle = oceanGrad;
+        tc.fillRect(0, 0, TEX_W, TEX_H);
+
+        // Ocean shimmer / depth variation
+        for (let i = 0; i < 6000; i++) {
+            const x = Math.random() * TEX_W;
+            const y = Math.random() * TEX_H;
+            const r = Math.random() * 40 + 5;
+            const g = tc.createRadialGradient(x, y, 0, x, y, r);
+            g.addColorStop(0, 'rgba(20,80,160,0.15)');
+            g.addColorStop(1, 'rgba(0,0,0,0)');
+            tc.fillStyle = g;
+            tc.beginPath(); tc.arc(x, y, r, 0, Math.PI * 2); tc.fill();
+        }
+
+        // Continents - simplified but recognizable shapes
+        function drawContinent(points, color, shadow) {
+            tc.beginPath();
+            tc.moveTo(points[0][0], points[0][1]);
+            for (let i = 1; i < points.length; i++) tc.lineTo(points[i][0], points[i][1]);
+            tc.closePath();
+            tc.fillStyle = color;
+            tc.fill();
+            if (shadow) {
+                tc.strokeStyle = 'rgba(0,0,0,0.3)';
+                tc.lineWidth = 3;
+                tc.stroke();
+            }
+        }
+
+        // Color palette for continents
+        const landBase = '#3d7a3a';
+        const landMid  = '#4a8f45';
+        const landHigh = '#5aa050';
+        const desert   = '#c8a060';
+        const desert2  = '#b89050';
+        const tundra   = '#7a8a6a';
+        const forest   = '#2d6a2a';
+        const jungle   = '#1a5a1a';
+
+        // North America
+        drawContinent([
+            [320,160],[360,150],[400,140],[440,145],[460,165],[470,200],
+            [465,240],[450,280],[440,320],[430,380],[420,430],[400,470],
+            [380,490],[360,480],[340,460],[320,440],[300,400],[295,360],
+            [300,320],[310,280],[315,240],[310,200],[315,175]
+        ], landMid, true);
+        // Canada/tundra overlay
+        drawContinent([
+            [320,160],[360,150],[400,140],[440,145],[460,165],[465,190],
+            [450,195],[430,185],[400,175],[370,170],[340,165],[320,170]
+        ], tundra, false);
+        // Mexican/desert
+        drawContinent([
+            [400,430],[420,420],[430,440],[420,470],[400,490],[380,490],[380,470]
+        ], desert, false);
+
+        // Greenland
+        drawContinent([
+            [490,90],[520,80],[550,85],[565,110],[560,145],[540,160],
+            [510,165],[490,150],[480,130],[485,105]
+        ], '#d0e8f0', true);
+
+        // South America
+        drawContinent([
+            [400,490],[420,490],[440,500],[460,520],[470,560],[475,610],
+            [465,660],[450,710],[430,750],[410,770],[390,770],[370,755],
+            [355,720],[350,680],[355,640],[360,600],[360,560],[365,520],
+            [375,500],[390,492]
+        ], landMid, true);
+        // Amazon jungle
+        drawContinent([
+            [380,530],[420,520],[450,540],[455,580],[445,620],[420,630],
+            [390,620],[370,595],[368,560],[375,535]
+        ], jungle, false);
+        // Patagonia/dry
+        drawContinent([
+            [365,700],[385,695],[400,710],[395,750],[375,755],[355,740],[358,720]
+        ], desert2, false);
+
+        // Europe
+        drawContinent([
+            [800,170],[820,160],[855,158],[875,170],[880,190],[870,210],
+            [850,225],[820,230],[800,225],[782,210],[783,190]
+        ], landHigh, true);
+        // Scandinavia
+        drawContinent([
+            [820,130],[840,120],[858,130],[862,155],[848,165],[828,165],[815,150]
+        ], tundra, false);
+        // Iberian peninsula
+        drawContinent([
+            [782,210],[800,205],[810,215],[810,235],[795,245],[778,238],[773,222]
+        ], desert2, false);
+
+        // Africa
+        drawContinent([
+            [800,225],[835,220],[870,230],[895,260],[910,310],[915,370],
+            [910,430],[900,490],[885,540],[870,580],[850,610],[830,625],
+            [808,625],[790,605],[778,570],[772,520],[775,470],[780,420],
+            [778,370],[782,310],[790,265],[796,240]
+        ], landBase, true);
+        // Sahara
+        drawContinent([
+            [800,230],[860,225],[900,250],[910,290],[900,320],[860,325],
+            [820,320],[800,300],[792,270],[795,245]
+        ], desert, false);
+        // Congo jungle
+        drawContinent([
+            [828,390],[855,385],[875,400],[878,435],[860,455],[835,455],
+            [818,440],[815,415],[820,395]
+        ], jungle, false);
+        // Kalahari
+        drawContinent([
+            [820,510],[845,505],[860,520],[855,555],[838,565],[818,555],[812,530]
+        ], desert2, false);
+
+        // Asia main body
+        drawContinent([
+            [880,190],[900,185],[950,180],[1000,175],[1060,170],[1120,175],
+            [1160,180],[1200,195],[1220,220],[1210,250],[1200,280],
+            [1180,300],[1160,320],[1140,340],[1130,370],[1120,390],
+            [1100,410],[1070,420],[1040,430],[1010,440],[990,455],
+            [970,460],[950,455],[930,440],[920,420],[910,400],
+            [900,380],[895,350],[892,320],[888,290],[882,260],[876,230],[876,205]
+        ], landMid, true);
+        // Siberia tundra
+        drawContinent([
+            [880,175],[950,165],[1050,160],[1150,165],[1200,180],[1200,195],
+            [1160,190],[1100,185],[1030,180],[970,178],[920,180],[890,185]
+        ], tundra, false);
+        // Arabian/Middle East desert
+        drawContinent([
+            [895,270],[930,265],[945,280],[950,310],[940,340],[920,355],
+            [900,350],[888,330],[886,300],[890,278]
+        ], desert, false);
+        // Indian subcontinent
+        drawContinent([
+            [985,305],[1010,300],[1030,310],[1045,335],[1050,370],
+            [1040,410],[1020,435],[995,450],[972,445],[958,425],
+            [952,395],[958,360],[968,330],[978,312]
+        ], landBase, true);
+        // Southeast Asia
+        drawContinent([
+            [1110,340],[1140,340],[1165,355],[1180,380],[1170,410],
+            [1145,425],[1120,420],[1105,400],[1100,375],[1105,350]
+        ], jungle, false);
+
+        // China/Gobi
+        drawContinent([
+            [1020,195],[1080,192],[1130,200],[1160,215],[1160,240],
+            [1140,260],[1110,270],[1070,268],[1030,260],[1005,245],
+            [1000,220],[1010,200]
+        ], desert2, false);
+
+        // Japan
+        drawContinent([
+            [1195,225],[1210,220],[1220,232],[1215,250],[1205,258],
+            [1195,250],[1190,238]
+        ], landHigh, true);
+
+        // Australia
+        drawContinent([
+            [1115,520],[1150,510],[1195,515],[1220,535],[1235,570],
+            [1235,615],[1220,650],[1195,670],[1155,678],[1120,672],
+            [1095,655],[1082,625],[1085,590],[1095,558],[1108,535]
+        ], landBase, true);
+        // Australian outback
+        drawContinent([
+            [1120,545],[1165,538],[1200,555],[1210,590],[1200,625],
+            [1170,635],[1135,628],[1112,605],[1110,575],[1118,550]
+        ], desert, false);
+
+        // Antarctica (bottom strip)
+        const antGrad = tc.createLinearGradient(0, TEX_H - 80, 0, TEX_H);
+        antGrad.addColorStop(0, 'rgba(220,235,245,0)');
+        antGrad.addColorStop(0.4, 'rgba(220,235,245,0.7)');
+        antGrad.addColorStop(1, 'rgba(240,248,255,0.95)');
+        tc.fillStyle = antGrad;
+        tc.fillRect(0, TEX_H - 80, TEX_W, 80);
+
+        // Ice cap at north
+        const iceGrad = tc.createLinearGradient(0, 0, 0, 80);
+        iceGrad.addColorStop(0, 'rgba(220,235,248,0.9)');
+        iceGrad.addColorStop(1, 'rgba(220,235,248,0)');
+        tc.fillStyle = iceGrad;
+        tc.fillRect(0, 0, TEX_W, 80);
+
+        // Duplicate wrap (texture needs seamless tiling - add left copy of right portion)
+        const imgData = tc.getImageData(0, 0, TEX_W, TEX_H);
+        tc.putImageData(imgData, 0, 0);
+
+        // Create Three.js texture from canvas
+        const earthTexture = new THREE.CanvasTexture(texCanvas);
+
+        // ── Specular / roughness map (ocean shiny, land matte) ──
+        const specCanvas = document.createElement('canvas');
+        specCanvas.width = TEX_W; specCanvas.height = TEX_H;
+        const sc = specCanvas.getContext('2d');
+        // Start black (no specularity)
+        sc.fillStyle = '#000';
+        sc.fillRect(0, 0, TEX_W, TEX_H);
+        // Paint white over oceans - we'll use the inverse: check ocean pixels from original
+        sc.globalCompositeOperation = 'difference';
+        sc.drawImage(texCanvas, 0, 0);
+        // Simple approach: just use a tinted version
+        sc.globalCompositeOperation = 'source-over';
+        const specTex = new THREE.CanvasTexture(specCanvas);
+
+        // ── Cloud layer ──
+        const cloudCanvas = document.createElement('canvas');
+        cloudCanvas.width = TEX_W; cloudCanvas.height = TEX_H;
+        const cc = cloudCanvas.getContext('2d');
+        cc.clearRect(0, 0, TEX_W, TEX_H);
+
+        // Generate cloud patches
+        for (let ci = 0; ci < 300; ci++) {
+            const cx2 = Math.random() * TEX_W;
+            const cy2 = Math.random() * TEX_H;
+            const rw = Math.random() * 120 + 30;
+            const rh = rw * (0.3 + Math.random() * 0.4);
+            const alpha = 0.3 + Math.random() * 0.5;
+            const g2 = cc.createRadialGradient(cx2, cy2, 0, cx2, cy2, rw);
+            g2.addColorStop(0, `rgba(255,255,255,${alpha})`);
+            g2.addColorStop(0.5, `rgba(255,255,255,${alpha * 0.5})`);
+            g2.addColorStop(1, 'rgba(255,255,255,0)');
+            cc.fillStyle = g2;
+            cc.save();
+            cc.translate(cx2, cy2);
+            cc.scale(1, rh / rw);
+            cc.translate(-cx2, -cy2);
+            cc.beginPath();
+            cc.arc(cx2, cy2, rw, 0, Math.PI * 2);
+            cc.fill();
+            cc.restore();
+        }
+        // Polar cloud bands
+        const pGrad1 = cc.createLinearGradient(0, 0, 0, 110);
+        pGrad1.addColorStop(0, 'rgba(255,255,255,0.8)');
+        pGrad1.addColorStop(1, 'rgba(255,255,255,0)');
+        cc.fillStyle = pGrad1;
+        cc.fillRect(0, 0, TEX_W, 110);
+        const pGrad2 = cc.createLinearGradient(0, TEX_H - 90, 0, TEX_H);
+        pGrad2.addColorStop(0, 'rgba(255,255,255,0)');
+        pGrad2.addColorStop(1, 'rgba(255,255,255,0.9)');
+        cc.fillStyle = pGrad2;
+        cc.fillRect(0, TEX_H - 90, TEX_W, 90);
+        const cloudTexture = new THREE.CanvasTexture(cloudCanvas);
+
+        // ── Earth Sphere ──
+        const earthGeo = new THREE.SphereGeometry(1, 64, 64);
+        const earthMat = new THREE.MeshPhongMaterial({
+            map: earthTexture,
+            specular: new THREE.Color(0x224488),
+            shininess: 18,
+            bumpScale: 0.01,
+        });
+        const earth = new THREE.Mesh(earthGeo, earthMat);
+        scene.add(earth);
+
+        // ── Cloud sphere (slightly larger) ──
+        const cloudGeo = new THREE.SphereGeometry(1.012, 64, 64);
+        const cloudMat = new THREE.MeshPhongMaterial({
+            map: cloudTexture,
+            transparent: true,
+            opacity: 0.75,
+            depthWrite: false,
+        });
+        const clouds = new THREE.Mesh(cloudGeo, cloudMat);
+        scene.add(clouds);
+
+        // ── Atmosphere glow (larger sphere, transparent blue) ──
+        const atmGeo = new THREE.SphereGeometry(1.08, 64, 64);
+        const atmMat = new THREE.MeshPhongMaterial({
+            color: 0x1a6fbf,
+            transparent: true,
+            opacity: 0.12,
+            side: THREE.FrontSide,
+            depthWrite: false,
+        });
+        const atmosphere = new THREE.Mesh(atmGeo, atmMat);
+        scene.add(atmosphere);
+
+        // ── Outer glow ring ──
+        const outerGeo = new THREE.SphereGeometry(1.15, 32, 32);
+        const outerMat = new THREE.MeshBasicMaterial({
+            color: 0x0066cc,
+            transparent: true,
+            opacity: 0.04,
+            side: THREE.BackSide,
+        });
+        scene.add(new THREE.Mesh(outerGeo, outerMat));
+
+        // ── Attack arc overlays using Line objects ──
+        const cities3D = [
+            { lat: 40.71, lng: -74.01 },  // NYC
+            { lat: 51.51, lng: -0.13 },   // London
+            { lat: 35.68, lng: 139.69 },  // Tokyo
+            { lat: 48.86, lng: 2.35 },    // Paris
+            { lat: 52.52, lng: 13.41 },   // Berlin
+            { lat: -23.55, lng: -46.63 }, // São Paulo
+            { lat: 31.23, lng: 121.47 },  // Shanghai
+            { lat: 55.76, lng: 37.62 },   // Moscow
+            { lat: 28.61, lng: 77.21 },   // Delhi
+            { lat: -33.87, lng: 151.21 }, // Sydney
+            { lat: 37.77, lng: -122.42 }, // SF
+            { lat: 19.08, lng: 72.88 },   // Mumbai
+            { lat: 1.35,  lng: 103.82 },  // Singapore
+            { lat: 43.65, lng: -79.38 },  // Toronto
+            { lat: 30.04, lng: 31.24 },   // Cairo
+            { lat: 6.52,  lng: 3.38 },    // Lagos
+            { lat: -34.60, lng: -58.38 }, // Buenos Aires
+            { lat: 41.01, lng: 28.98 },   // Istanbul
+            { lat: 22.32, lng: 114.17 },  // Hong Kong
+        ];
+
+        function latLngToVec3(lat, lng, r) {
+            const phi = (90 - lat) * Math.PI / 180;
+            const theta = (lng + 180) * Math.PI / 180;
+            return new THREE.Vector3(
+                -r * Math.sin(phi) * Math.cos(theta),
+                r * Math.cos(phi),
+                r * Math.sin(phi) * Math.sin(theta)
+            );
+        }
+
+        // City dot markers
+        const cityGroup = new THREE.Group();
+        cities3D.forEach(city => {
+            const pos = latLngToVec3(city.lat, city.lng, 1.02);
+            const geo = new THREE.SphereGeometry(0.008, 8, 8);
+            const mat = new THREE.MeshBasicMaterial({ color: 0x00ff88 });
+            const dot = new THREE.Mesh(geo, mat);
+            dot.position.copy(pos);
+            cityGroup.add(dot);
+        });
+        scene.add(cityGroup);
+
+        // Arc animation system
+        const arcGroup = new THREE.Group();
+        scene.add(arcGroup);
+        const activeArcs = [];
+
+        function spawnArc3D() {
+            const a = Math.floor(Math.random() * cities3D.length);
+            let b = Math.floor(Math.random() * cities3D.length);
+            while (b === a) b = Math.floor(Math.random() * cities3D.length);
+
+            const isAttack = Math.random() < 0.65;
+            const color = isAttack ? 0xff3333 : 0x00ccff;
+
+            const fromV = latLngToVec3(cities3D[a].lat, cities3D[a].lng, 1.02);
+            const toV   = latLngToVec3(cities3D[b].lat, cities3D[b].lng, 1.02);
+
+            // Build arc points
+            const STEPS = 60;
+            const midV = fromV.clone().add(toV).multiplyScalar(0.5).normalize().multiplyScalar(1.4);
+
+            const points = [];
+            for (let i = 0; i <= STEPS; i++) {
+                const t = i / STEPS;
+                const p = new THREE.Vector3()
+                    .addScaledVector(fromV, (1 - t) * (1 - t))
+                    .addScaledVector(midV, 2 * (1 - t) * t)
+                    .addScaledVector(toV, t * t);
+                points.push(p);
+            }
+
+            const geo = new THREE.BufferGeometry().setFromPoints(points.slice(0, 1));
+            const mat = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.85, linewidth: 1 });
+            const line = new THREE.Line(geo, mat);
+            arcGroup.add(line);
+
+            activeArcs.push({ line, points, progress: 0, speed: 0.012 + Math.random() * 0.01 });
+        }
+
+        setInterval(spawnArc3D, 900);
+
+        // Stars background
+        const starGeo = new THREE.BufferGeometry();
+        const starVerts = [];
+        for (let i = 0; i < 3000; i++) {
+            const r = 400 + Math.random() * 200;
+            const phi = Math.random() * Math.PI * 2;
+            const theta = Math.acos(2 * Math.random() - 1);
+            starVerts.push(
+                r * Math.sin(theta) * Math.cos(phi),
+                r * Math.sin(theta) * Math.sin(phi),
+                r * Math.cos(theta)
+            );
+        }
+        starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starVerts, 3));
+        const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.8, sizeAttenuation: false });
+        scene.add(new THREE.Points(starGeo, starMat));
+
+        // Animation loop
+        let frame = 0;
+        function animate() {
+            requestAnimationFrame(animate);
+            frame++;
+
+            earth.rotation.y += 0.0018;
+            clouds.rotation.y += 0.0020;
+            cityGroup.rotation.y += 0.0018;
+            arcGroup.rotation.y += 0.0018;
+            atmosphere.rotation.y += 0.0018;
+
+            // Update arcs
+            for (let i = activeArcs.length - 1; i >= 0; i--) {
+                const arc = activeArcs[i];
+                arc.progress = Math.min(arc.progress + arc.speed, 1);
+                const maxIdx = Math.floor(arc.progress * arc.points.length);
+                const pts = arc.points.slice(0, Math.max(2, maxIdx));
+                arc.line.geometry.setFromPoints(pts);
+                arc.line.geometry.attributes.position.needsUpdate = true;
+
+                if (arc.progress >= 1) {
+                    // Fade out
+                    arc.line.material.opacity -= 0.04;
+                    if (arc.line.material.opacity <= 0) {
+                        arcGroup.remove(arc.line);
+                        arc.line.geometry.dispose();
+                        arc.line.material.dispose();
+                        activeArcs.splice(i, 1);
+                    }
+                }
+            }
+
+            renderer.render(scene, camera);
+        }
+        animate();
+    })();
+
+    /* ═══════════════════════════════════════════════════════════
+       STATS COUNTER
+       ═══════════════════════════════════════════════════════════ */
+    (function () {
+        const counters = {
+            attacks: { el: document.getElementById('stat-attacks'), val: 12847, inc: [3,12] },
+            cves:    { el: document.getElementById('stat-cves'),    val: 47,    inc: [0,2] },
+            patches: { el: document.getElementById('stat-patches'), val: 1203,  inc: [1,5] },
+        };
+        function fmt(n) { return n.toLocaleString(); }
+        Object.values(counters).forEach(c => c.el.textContent = fmt(c.val));
+        setInterval(() => {
+            Object.values(counters).forEach(c => {
+                c.val += Math.floor(Math.random() * (c.inc[1] - c.inc[0] + 1)) + c.inc[0];
+                c.el.textContent = fmt(c.val);
+            });
+        }, 2000);
+    })();
+
+    /* ═══════════════════════════════════════════════════════════
+       THREAT PILLS
+       ═══════════════════════════════════════════════════════════ */
+    (function () {
+        const threats = [
+            { name:'SQL INJECTION',  val:4821,  critical:true },
+            { name:'XSS ATTACKS',    val:3192,  critical:true },
+            { name:'LOG4SHELL/RCE',  val:876,   critical:true },
+            { name:'SSRF',           val:1540,  critical:false },
+            { name:'PATH TRAVERSAL', val:2103,  critical:false },
+            { name:'PORT SCAN',      val:8742,  critical:false },
+            { name:'BRUTE FORCE',    val:5619,  critical:true },
+            { name:'C2 BEACON',      val:312,   critical:true },
+            { name:'DATA EXFIL',     val:198,   critical:true },
+            { name:'DDOS/FLOOD',     val:1457,  critical:false },
+        ];
+        const grid = document.getElementById('threats-grid');
+        threats.forEach((t, i) => {
+            const div = document.createElement('div');
+            div.className = 'threat-pill';
+            div.innerHTML = `<div class="threat-count ${t.critical?'red':'green'}" id="tc-${i}">${t.val.toLocaleString()}</div><div class="threat-label">${t.name}</div>`;
+            grid.appendChild(div);
+        });
+        setInterval(() => {
+            threats.forEach((t, i) => {
+                t.val += Math.floor(Math.random() * 8) + 1;
+                const el = document.getElementById('tc-'+i);
+                if (el) el.textContent = t.val.toLocaleString();
+            });
+        }, 2000);
+    })();
+
+    /* ═══════════════════════════════════════════════════════════
+       BOTTOM TICKER
+       ═══════════════════════════════════════════════════════════ */
+    (function () {
+        const events = [
+            '<span class="crit">[CRIT]</span> SQL Injection attempt · /api/users · CVE-2024-3094 · BLOCKED',
+            '<span class="high">[HIGH]</span> XSS payload detected · /search?q= · CVE-2023-44487 · MITIGATED',
+            '<span class="crit">[CRIT]</span> RCE via Log4Shell · /api/log · CVE-2021-44228 · BLOCKED',
+            '<span class="med">[MED]</span> SSRF probe · /fetch?url= · CVE-2023-35116 · MONITORED',
+            '<span class="high">[HIGH]</span> Brute force login · /auth/login · 847 attempts · THROTTLED',
+            '<span class="crit">[CRIT]</span> C2 beacon detected · egress:8443 · COBALT-STRIKE · KILLED',
+            '<span class="med">[MED]</span> Port scan detected · 10.0.0.0/24 · 1024 ports · LOGGED',
+            '<span class="high">[HIGH]</span> Data exfil attempt · /api/export · 2.4GB staged · BLOCKED',
+            '<span class="crit">[CRIT]</span> Path traversal · /../../../etc/passwd · CVE-2024-0001 · BLOCKED',
+            '<span class="med">[MED]</span> DDoS flood detected · UDP:53 · 14Gbps · RATE-LIMITED',
+            '<span class="high">[HIGH]</span> Privilege escalation · sudo miscfg · CVE-2023-22809 · PATCHED',
+            '<span class="crit">[CRIT]</span> Zero-day exploit · kernel 6.1 · CVE-2024-XXXX · CONTAINED',
+        ];
+        const track = document.getElementById('ticker-track');
+        const html = events.map(e => `<span class="ticker-item">${e}</span>`).join('');
+        track.innerHTML = html + html;
+    })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,376 @@
+2026-03-16 14:30:16 | INFO     | PortScan             | Starting FAST port scan on 127.0.0.1  |  ports: 8  |  speed: fast
+2026-03-16 14:30:18 | DEBUG    | PortScan             | Port    22 — closed / filtered
+2026-03-16 14:30:20 | DEBUG    | PortScan             | Port    80 — closed / filtered
+2026-03-16 14:30:22 | DEBUG    | PortScan             | Port   443 — closed / filtered
+2026-03-16 14:30:24 | DEBUG    | PortScan             | Port  8080 — closed / filtered
+2026-03-16 14:30:26 | DEBUG    | PortScan             | Port  8443 — closed / filtered
+2026-03-16 14:30:28 | DEBUG    | PortScan             | Port  3306 — closed / filtered
+2026-03-16 14:30:28 | INFO     | PortScan             | Port  5432 — OPEN
+2026-03-16 14:30:31 | DEBUG    | PortScan             | Port  6379 — closed / filtered
+2026-03-16 14:30:31 | INFO     | PortScan             | Scan complete — 1 open port(s) found out of 8 probed
+2026-03-16 14:30:31 | INFO     | PortScan             | ============================================================
+2026-03-16 14:30:31 | INFO     | PortScan             |   SIMULATION SUMMARY — PortScan
+2026-03-16 14:30:31 | INFO     | PortScan             | ============================================================
+2026-03-16 14:30:31 | INFO     | PortScan             |   Target         : 127.0.0.1:80
+2026-03-16 14:30:31 | INFO     | PortScan             |   Duration       : 14.21 s
+2026-03-16 14:30:31 | INFO     | PortScan             |   Packets sent   : 8
+2026-03-16 14:30:31 | INFO     | PortScan             |   Connections    : 8
+2026-03-16 14:30:31 | INFO     | PortScan             |   Bytes sent     : 0
+2026-03-16 14:30:31 | INFO     | PortScan             |   Errors         : 0
+2026-03-16 14:30:31 | INFO     | PortScan             | ============================================================
+2026-03-16 14:31:07 | INFO     | PortScan             | Starting FAST port scan on 127.0.0.1  |  ports: 8  |  speed: fast
+2026-03-16 14:31:09 | DEBUG    | PortScan             | Port    22 — closed / filtered
+2026-03-16 14:31:11 | DEBUG    | PortScan             | Port    80 — closed / filtered
+2026-03-16 14:31:13 | DEBUG    | PortScan             | Port   443 — closed / filtered
+2026-03-16 14:31:15 | DEBUG    | PortScan             | Port  8080 — closed / filtered
+2026-03-16 14:31:17 | DEBUG    | PortScan             | Port  8443 — closed / filtered
+2026-03-16 14:31:19 | DEBUG    | PortScan             | Port  3306 — closed / filtered
+2026-03-16 14:31:19 | INFO     | PortScan             | Port  5432 — OPEN
+2026-03-16 14:31:21 | DEBUG    | PortScan             | Port  6379 — closed / filtered
+2026-03-16 14:31:21 | INFO     | PortScan             | Scan complete — 1 open port(s) found out of 8 probed
+2026-03-16 14:31:21 | INFO     | PortScan             | ============================================================
+2026-03-16 14:31:21 | INFO     | PortScan             |   SIMULATION SUMMARY — PortScan
+2026-03-16 14:31:21 | INFO     | PortScan             | ============================================================
+2026-03-16 14:31:21 | INFO     | PortScan             |   Target         : 127.0.0.1:80
+2026-03-16 14:31:21 | INFO     | PortScan             |   Duration       : 14.22 s
+2026-03-16 14:31:21 | INFO     | PortScan             |   Packets sent   : 8
+2026-03-16 14:31:21 | INFO     | PortScan             |   Connections    : 8
+2026-03-16 14:31:21 | INFO     | PortScan             |   Bytes sent     : 0
+2026-03-16 14:31:21 | INFO     | PortScan             |   Errors         : 0
+2026-03-16 14:31:21 | INFO     | PortScan             | ============================================================
+2026-03-16 14:31:59 | INFO     | PortScan             | Starting FAST port scan on 127.0.0.1  |  ports: 8  |  speed: fast
+2026-03-16 14:32:01 | DEBUG    | PortScan             | Port    22 — closed / filtered
+2026-03-16 14:32:03 | DEBUG    | PortScan             | Port    80 — closed / filtered
+2026-03-16 14:32:05 | DEBUG    | PortScan             | Port   443 — closed / filtered
+2026-03-16 14:32:07 | DEBUG    | PortScan             | Port  8080 — closed / filtered
+2026-03-16 14:32:09 | DEBUG    | PortScan             | Port  8443 — closed / filtered
+2026-03-16 14:32:11 | DEBUG    | PortScan             | Port  3306 — closed / filtered
+2026-03-16 14:32:11 | INFO     | PortScan             | Port  5432 — OPEN
+2026-03-16 14:32:13 | DEBUG    | PortScan             | Port  6379 — closed / filtered
+2026-03-16 14:32:13 | INFO     | PortScan             | Scan complete — 1 open port(s) found out of 8 probed
+2026-03-16 14:32:13 | INFO     | PortScan             | ============================================================
+2026-03-16 14:32:13 | INFO     | PortScan             |   SIMULATION SUMMARY — PortScan
+2026-03-16 14:32:13 | INFO     | PortScan             | ============================================================
+2026-03-16 14:32:13 | INFO     | PortScan             |   Target         : 127.0.0.1:80
+2026-03-16 14:32:13 | INFO     | PortScan             |   Duration       : 14.17 s
+2026-03-16 14:32:13 | INFO     | PortScan             |   Packets sent   : 8
+2026-03-16 14:32:13 | INFO     | PortScan             |   Connections    : 8
+2026-03-16 14:32:13 | INFO     | PortScan             |   Bytes sent     : 0
+2026-03-16 14:32:13 | INFO     | PortScan             |   Errors         : 0
+2026-03-16 14:32:13 | INFO     | PortScan             | ============================================================
+2026-03-16 14:32:48 | INFO     | PortScan             | Starting FAST port scan on 127.0.0.1  |  ports: 8  |  speed: fast
+2026-03-16 14:32:50 | DEBUG    | PortScan             | Port    22 — closed / filtered
+2026-03-16 14:32:52 | DEBUG    | PortScan             | Port    80 — closed / filtered
+2026-03-16 14:32:54 | DEBUG    | PortScan             | Port   443 — closed / filtered
+2026-03-16 14:32:56 | DEBUG    | PortScan             | Port  8080 — closed / filtered
+2026-03-16 14:32:58 | DEBUG    | PortScan             | Port  8443 — closed / filtered
+2026-03-16 14:33:00 | DEBUG    | PortScan             | Port  3306 — closed / filtered
+2026-03-16 14:33:00 | INFO     | PortScan             | Port  5432 — OPEN
+2026-03-16 14:33:02 | DEBUG    | PortScan             | Port  6379 — closed / filtered
+2026-03-16 14:33:02 | INFO     | PortScan             | Scan complete — 1 open port(s) found out of 8 probed
+2026-03-16 14:33:02 | INFO     | PortScan             | ============================================================
+2026-03-16 14:33:02 | INFO     | PortScan             |   SIMULATION SUMMARY — PortScan
+2026-03-16 14:33:02 | INFO     | PortScan             | ============================================================
+2026-03-16 14:33:02 | INFO     | PortScan             |   Target         : 127.0.0.1:80
+2026-03-16 14:33:02 | INFO     | PortScan             |   Duration       : 14.20 s
+2026-03-16 14:33:02 | INFO     | PortScan             |   Packets sent   : 8
+2026-03-16 14:33:02 | INFO     | PortScan             |   Connections    : 8
+2026-03-16 14:33:02 | INFO     | PortScan             |   Bytes sent     : 0
+2026-03-16 14:33:02 | INFO     | PortScan             |   Errors         : 0
+2026-03-16 14:33:02 | INFO     | PortScan             | ============================================================
+2026-03-16 14:33:34 | INFO     | PortScan             | Starting FAST port scan on 127.0.0.1  |  ports: 8  |  speed: fast
+2026-03-16 14:33:36 | DEBUG    | PortScan             | Port    22 — closed / filtered
+2026-03-16 14:33:38 | DEBUG    | PortScan             | Port    80 — closed / filtered
+2026-03-16 14:33:40 | DEBUG    | PortScan             | Port   443 — closed / filtered
+2026-03-16 14:33:42 | DEBUG    | PortScan             | Port  8080 — closed / filtered
+2026-03-16 14:33:44 | DEBUG    | PortScan             | Port  8443 — closed / filtered
+2026-03-16 14:33:46 | DEBUG    | PortScan             | Port  3306 — closed / filtered
+2026-03-16 14:33:46 | INFO     | PortScan             | Port  5432 — OPEN
+2026-03-16 14:33:48 | DEBUG    | PortScan             | Port  6379 — closed / filtered
+2026-03-16 14:33:48 | INFO     | PortScan             | Scan complete — 1 open port(s) found out of 8 probed
+2026-03-16 14:33:48 | INFO     | PortScan             | ============================================================
+2026-03-16 14:33:48 | INFO     | PortScan             |   SIMULATION SUMMARY — PortScan
+2026-03-16 14:33:48 | INFO     | PortScan             | ============================================================
+2026-03-16 14:33:48 | INFO     | PortScan             |   Target         : 127.0.0.1:80
+2026-03-16 14:33:48 | INFO     | PortScan             |   Duration       : 14.15 s
+2026-03-16 14:33:48 | INFO     | PortScan             |   Packets sent   : 8
+2026-03-16 14:33:48 | INFO     | PortScan             |   Connections    : 8
+2026-03-16 14:33:48 | INFO     | PortScan             |   Bytes sent     : 0
+2026-03-16 14:33:48 | INFO     | PortScan             |   Errors         : 0
+2026-03-16 14:33:48 | INFO     | PortScan             | ============================================================
+2026-03-16 14:38:51 | INFO     | TrafficFlood         | Stop signal received — shutting down …
+2026-03-16 14:38:52 | INFO     | TrafficFlood         | Flood complete — 25 requests sent, 25 errors
+2026-03-16 14:38:52 | INFO     | TrafficFlood         | ============================================================
+2026-03-16 14:38:52 | INFO     | TrafficFlood         |   SIMULATION SUMMARY — TrafficFlood
+2026-03-16 14:38:52 | INFO     | TrafficFlood         | ============================================================
+2026-03-16 14:38:52 | INFO     | TrafficFlood         |   Target         : 127.0.0.1:80
+2026-03-16 14:38:52 | INFO     | TrafficFlood         |   Duration       : 10.89 s
+2026-03-16 14:38:52 | INFO     | TrafficFlood         |   Packets sent   : 25
+2026-03-16 14:38:52 | INFO     | TrafficFlood         |   Connections    : 0
+2026-03-16 14:38:52 | INFO     | TrafficFlood         |   Bytes sent     : 0
+2026-03-16 14:38:52 | INFO     | TrafficFlood         |   Errors         : 25
+2026-03-16 14:38:52 | INFO     | TrafficFlood         | ============================================================
+2026-03-16 14:39:36 | INFO     | TrafficFlood         | Stop signal received — shutting down …
+2026-03-16 14:39:37 | INFO     | TrafficFlood         | Flood complete — 25 requests sent, 25 errors
+2026-03-16 14:39:37 | INFO     | TrafficFlood         | ============================================================
+2026-03-16 14:39:37 | INFO     | TrafficFlood         |   SIMULATION SUMMARY — TrafficFlood
+2026-03-16 14:39:37 | INFO     | TrafficFlood         | ============================================================
+2026-03-16 14:39:37 | INFO     | TrafficFlood         |   Target         : 127.0.0.1:80
+2026-03-16 14:39:37 | INFO     | TrafficFlood         |   Duration       : 10.75 s
+2026-03-16 14:39:37 | INFO     | TrafficFlood         |   Packets sent   : 25
+2026-03-16 14:39:37 | INFO     | TrafficFlood         |   Connections    : 0
+2026-03-16 14:39:37 | INFO     | TrafficFlood         |   Bytes sent     : 0
+2026-03-16 14:39:37 | INFO     | TrafficFlood         |   Errors         : 25
+2026-03-16 14:39:37 | INFO     | TrafficFlood         | ============================================================
+2026-03-16 14:40:21 | INFO     | TrafficFlood         | Stop signal received — shutting down …
+2026-03-16 14:40:22 | INFO     | TrafficFlood         | Flood complete — 25 requests sent, 25 errors
+2026-03-16 14:40:22 | INFO     | TrafficFlood         | ============================================================
+2026-03-16 14:40:22 | INFO     | TrafficFlood         |   SIMULATION SUMMARY — TrafficFlood
+2026-03-16 14:40:22 | INFO     | TrafficFlood         | ============================================================
+2026-03-16 14:40:22 | INFO     | TrafficFlood         |   Target         : 127.0.0.1:80
+2026-03-16 14:40:22 | INFO     | TrafficFlood         |   Duration       : 10.74 s
+2026-03-16 14:40:22 | INFO     | TrafficFlood         |   Packets sent   : 25
+2026-03-16 14:40:22 | INFO     | TrafficFlood         |   Connections    : 0
+2026-03-16 14:40:22 | INFO     | TrafficFlood         |   Bytes sent     : 0
+2026-03-16 14:40:22 | INFO     | TrafficFlood         |   Errors         : 25
+2026-03-16 14:40:22 | INFO     | TrafficFlood         | ============================================================
+2026-03-16 14:41:07 | INFO     | TrafficFlood         | Stop signal received — shutting down …
+2026-03-16 14:41:08 | INFO     | TrafficFlood         | Flood complete — 25 requests sent, 25 errors
+2026-03-16 14:41:08 | INFO     | TrafficFlood         | ============================================================
+2026-03-16 14:41:08 | INFO     | TrafficFlood         |   SIMULATION SUMMARY — TrafficFlood
+2026-03-16 14:41:08 | INFO     | TrafficFlood         | ============================================================
+2026-03-16 14:41:08 | INFO     | TrafficFlood         |   Target         : 127.0.0.1:80
+2026-03-16 14:41:08 | INFO     | TrafficFlood         |   Duration       : 10.72 s
+2026-03-16 14:41:08 | INFO     | TrafficFlood         |   Packets sent   : 25
+2026-03-16 14:41:08 | INFO     | TrafficFlood         |   Connections    : 0
+2026-03-16 14:41:08 | INFO     | TrafficFlood         |   Bytes sent     : 0
+2026-03-16 14:41:08 | INFO     | TrafficFlood         |   Errors         : 25
+2026-03-16 14:41:08 | INFO     | TrafficFlood         | ============================================================
+2026-03-16 14:41:53 | INFO     | TrafficFlood         | Stop signal received — shutting down …
+2026-03-16 14:41:53 | INFO     | TrafficFlood         | Flood complete — 25 requests sent, 25 errors
+2026-03-16 14:41:53 | INFO     | TrafficFlood         | ============================================================
+2026-03-16 14:41:53 | INFO     | TrafficFlood         |   SIMULATION SUMMARY — TrafficFlood
+2026-03-16 14:41:53 | INFO     | TrafficFlood         | ============================================================
+2026-03-16 14:41:53 | INFO     | TrafficFlood         |   Target         : 127.0.0.1:80
+2026-03-16 14:41:53 | INFO     | TrafficFlood         |   Duration       : 10.68 s
+2026-03-16 14:41:53 | INFO     | TrafficFlood         |   Packets sent   : 25
+2026-03-16 14:41:53 | INFO     | TrafficFlood         |   Connections    : 0
+2026-03-16 14:41:53 | INFO     | TrafficFlood         |   Bytes sent     : 0
+2026-03-16 14:41:53 | INFO     | TrafficFlood         |   Errors         : 25
+2026-03-16 14:41:53 | INFO     | TrafficFlood         | ============================================================
+2026-03-16 15:01:44 | INFO     | PortScan             | Starting FAST port scan on localhost  |  ports: 8  |  speed: fast
+2026-03-16 15:01:46 | DEBUG    | PortScan             | Port    22 — closed / filtered
+2026-03-16 15:01:48 | DEBUG    | PortScan             | Port    80 — closed / filtered
+2026-03-16 15:01:50 | DEBUG    | PortScan             | Port   443 — closed / filtered
+2026-03-16 15:01:52 | DEBUG    | PortScan             | Port  8080 — closed / filtered
+2026-03-16 15:01:54 | DEBUG    | PortScan             | Port  8443 — closed / filtered
+2026-03-16 15:01:56 | DEBUG    | PortScan             | Port  3306 — closed / filtered
+2026-03-16 15:01:56 | INFO     | PortScan             | Port  5432 — OPEN
+2026-03-16 15:01:58 | DEBUG    | PortScan             | Port  6379 — closed / filtered
+2026-03-16 15:01:58 | INFO     | PortScan             | Scan complete — 1 open port(s) found out of 8 probed
+2026-03-16 15:01:58 | INFO     | PortScan             | ============================================================
+2026-03-16 15:01:58 | INFO     | PortScan             |   SIMULATION SUMMARY — PortScan
+2026-03-16 15:01:58 | INFO     | PortScan             | ============================================================
+2026-03-16 15:01:58 | INFO     | PortScan             |   Target         : localhost:80
+2026-03-16 15:01:58 | INFO     | PortScan             |   Duration       : 14.13 s
+2026-03-16 15:01:58 | INFO     | PortScan             |   Packets sent   : 8
+2026-03-16 15:01:58 | INFO     | PortScan             |   Connections    : 8
+2026-03-16 15:01:58 | INFO     | PortScan             |   Bytes sent     : 0
+2026-03-16 15:01:58 | INFO     | PortScan             |   Errors         : 0
+2026-03-16 15:01:58 | INFO     | PortScan             | ============================================================
+2026-03-16 15:02:25 | INFO     | PortScan             | Starting FAST port scan on localhost  |  ports: 8  |  speed: fast
+2026-03-16 15:02:27 | DEBUG    | PortScan             | Port    22 — closed / filtered
+2026-03-16 15:02:29 | DEBUG    | PortScan             | Port    80 — closed / filtered
+2026-03-16 15:02:31 | DEBUG    | PortScan             | Port   443 — closed / filtered
+2026-03-16 15:02:33 | DEBUG    | PortScan             | Port  8080 — closed / filtered
+2026-03-16 15:02:35 | DEBUG    | PortScan             | Port  8443 — closed / filtered
+2026-03-16 15:02:37 | DEBUG    | PortScan             | Port  3306 — closed / filtered
+2026-03-16 15:02:37 | INFO     | PortScan             | Port  5432 — OPEN
+2026-03-16 15:02:39 | DEBUG    | PortScan             | Port  6379 — closed / filtered
+2026-03-16 15:02:39 | INFO     | PortScan             | Scan complete — 1 open port(s) found out of 8 probed
+2026-03-16 15:02:39 | INFO     | PortScan             | ============================================================
+2026-03-16 15:02:39 | INFO     | PortScan             |   SIMULATION SUMMARY — PortScan
+2026-03-16 15:02:39 | INFO     | PortScan             | ============================================================
+2026-03-16 15:02:39 | INFO     | PortScan             |   Target         : localhost:80
+2026-03-16 15:02:39 | INFO     | PortScan             |   Duration       : 14.25 s
+2026-03-16 15:02:39 | INFO     | PortScan             |   Packets sent   : 8
+2026-03-16 15:02:39 | INFO     | PortScan             |   Connections    : 8
+2026-03-16 15:02:39 | INFO     | PortScan             |   Bytes sent     : 0
+2026-03-16 15:02:39 | INFO     | PortScan             |   Errors         : 0
+2026-03-16 15:02:39 | INFO     | PortScan             | ============================================================
+2026-03-16 15:11:57 | INFO     | PortScan             | Starting FAST port scan on 127.0.0.1  |  ports: 8  |  speed: fast
+2026-03-16 15:11:59 | DEBUG    | PortScan             | Port    22 — closed / filtered
+2026-03-16 15:12:01 | DEBUG    | PortScan             | Port    80 — closed / filtered
+2026-03-16 15:12:03 | DEBUG    | PortScan             | Port   443 — closed / filtered
+2026-03-16 15:12:05 | DEBUG    | PortScan             | Port  8080 — closed / filtered
+2026-03-16 15:12:07 | DEBUG    | PortScan             | Port  8443 — closed / filtered
+2026-03-16 15:12:09 | DEBUG    | PortScan             | Port  3306 — closed / filtered
+2026-03-16 15:12:09 | INFO     | PortScan             | Port  5432 — OPEN
+2026-03-16 15:12:11 | DEBUG    | PortScan             | Port  6379 — closed / filtered
+2026-03-16 15:12:11 | INFO     | PortScan             | Scan complete — 1 open port(s) found out of 8 probed
+2026-03-16 15:12:11 | INFO     | PortScan             | ============================================================
+2026-03-16 15:12:11 | INFO     | PortScan             |   SIMULATION SUMMARY — PortScan
+2026-03-16 15:12:11 | INFO     | PortScan             | ============================================================
+2026-03-16 15:12:11 | INFO     | PortScan             |   Target         : 127.0.0.1:80
+2026-03-16 15:12:11 | INFO     | PortScan             |   Duration       : 14.19 s
+2026-03-16 15:12:11 | INFO     | PortScan             |   Packets sent   : 8
+2026-03-16 15:12:11 | INFO     | PortScan             |   Connections    : 8
+2026-03-16 15:12:11 | INFO     | PortScan             |   Bytes sent     : 0
+2026-03-16 15:12:11 | INFO     | PortScan             |   Errors         : 0
+2026-03-16 15:12:11 | INFO     | PortScan             | ============================================================
+2026-03-16 15:12:29 | INFO     | PortScan             | Starting FAST port scan on 127.0.0.1  |  ports: 8  |  speed: fast
+2026-03-16 15:12:31 | DEBUG    | PortScan             | Port    22 — closed / filtered
+2026-03-16 15:12:33 | DEBUG    | PortScan             | Port    80 — closed / filtered
+2026-03-16 15:12:35 | DEBUG    | PortScan             | Port   443 — closed / filtered
+2026-03-16 15:12:37 | DEBUG    | PortScan             | Port  8080 — closed / filtered
+2026-03-16 15:12:39 | DEBUG    | PortScan             | Port  8443 — closed / filtered
+2026-03-16 15:12:41 | DEBUG    | PortScan             | Port  3306 — closed / filtered
+2026-03-16 15:12:41 | INFO     | PortScan             | Port  5432 — OPEN
+2026-03-16 15:12:43 | DEBUG    | PortScan             | Port  6379 — closed / filtered
+2026-03-16 15:12:43 | INFO     | PortScan             | Scan complete — 1 open port(s) found out of 8 probed
+2026-03-16 15:12:43 | INFO     | PortScan             | ============================================================
+2026-03-16 15:12:43 | INFO     | PortScan             |   SIMULATION SUMMARY — PortScan
+2026-03-16 15:12:43 | INFO     | PortScan             | ============================================================
+2026-03-16 15:12:43 | INFO     | PortScan             |   Target         : 127.0.0.1:80
+2026-03-16 15:12:43 | INFO     | PortScan             |   Duration       : 14.25 s
+2026-03-16 15:12:43 | INFO     | PortScan             |   Packets sent   : 8
+2026-03-16 15:12:43 | INFO     | PortScan             |   Connections    : 8
+2026-03-16 15:12:43 | INFO     | PortScan             |   Bytes sent     : 0
+2026-03-16 15:12:43 | INFO     | PortScan             |   Errors         : 0
+2026-03-16 15:12:43 | INFO     | PortScan             | ============================================================
+2026-03-16 15:13:00 | INFO     | PortScan             | Starting FAST port scan on 127.0.0.1  |  ports: 8  |  speed: fast
+2026-03-16 15:13:02 | DEBUG    | PortScan             | Port    22 — closed / filtered
+2026-03-16 15:13:04 | DEBUG    | PortScan             | Port    80 — closed / filtered
+2026-03-16 15:13:06 | DEBUG    | PortScan             | Port   443 — closed / filtered
+2026-03-16 15:13:08 | DEBUG    | PortScan             | Port  8080 — closed / filtered
+2026-03-16 15:13:10 | DEBUG    | PortScan             | Port  8443 — closed / filtered
+2026-03-16 15:13:12 | DEBUG    | PortScan             | Port  3306 — closed / filtered
+2026-03-16 15:13:12 | INFO     | PortScan             | Port  5432 — OPEN
+2026-03-16 15:13:14 | DEBUG    | PortScan             | Port  6379 — closed / filtered
+2026-03-16 15:13:14 | INFO     | PortScan             | Scan complete — 1 open port(s) found out of 8 probed
+2026-03-16 15:13:14 | INFO     | PortScan             | ============================================================
+2026-03-16 15:13:14 | INFO     | PortScan             |   SIMULATION SUMMARY — PortScan
+2026-03-16 15:13:14 | INFO     | PortScan             | ============================================================
+2026-03-16 15:13:14 | INFO     | PortScan             |   Target         : 127.0.0.1:80
+2026-03-16 15:13:14 | INFO     | PortScan             |   Duration       : 14.18 s
+2026-03-16 15:13:14 | INFO     | PortScan             |   Packets sent   : 8
+2026-03-16 15:13:14 | INFO     | PortScan             |   Connections    : 8
+2026-03-16 15:13:14 | INFO     | PortScan             |   Bytes sent     : 0
+2026-03-16 15:13:14 | INFO     | PortScan             |   Errors         : 0
+2026-03-16 15:13:14 | INFO     | PortScan             | ============================================================
+2026-03-16 15:13:30 | INFO     | PortScan             | Starting FAST port scan on 127.0.0.1  |  ports: 8  |  speed: fast
+2026-03-16 15:13:32 | DEBUG    | PortScan             | Port    22 — closed / filtered
+2026-03-16 15:13:34 | DEBUG    | PortScan             | Port    80 — closed / filtered
+2026-03-16 15:13:36 | DEBUG    | PortScan             | Port   443 — closed / filtered
+2026-03-16 15:13:38 | DEBUG    | PortScan             | Port  8080 — closed / filtered
+2026-03-16 15:13:41 | DEBUG    | PortScan             | Port  8443 — closed / filtered
+2026-03-16 15:13:43 | DEBUG    | PortScan             | Port  3306 — closed / filtered
+2026-03-16 15:13:43 | INFO     | PortScan             | Port  5432 — OPEN
+2026-03-16 15:13:45 | DEBUG    | PortScan             | Port  6379 — closed / filtered
+2026-03-16 15:13:45 | INFO     | PortScan             | Scan complete — 1 open port(s) found out of 8 probed
+2026-03-16 15:13:45 | INFO     | PortScan             | ============================================================
+2026-03-16 15:13:45 | INFO     | PortScan             |   SIMULATION SUMMARY — PortScan
+2026-03-16 15:13:45 | INFO     | PortScan             | ============================================================
+2026-03-16 15:13:45 | INFO     | PortScan             |   Target         : 127.0.0.1:80
+2026-03-16 15:13:45 | INFO     | PortScan             |   Duration       : 14.15 s
+2026-03-16 15:13:45 | INFO     | PortScan             |   Packets sent   : 8
+2026-03-16 15:13:45 | INFO     | PortScan             |   Connections    : 8
+2026-03-16 15:13:45 | INFO     | PortScan             |   Bytes sent     : 0
+2026-03-16 15:13:45 | INFO     | PortScan             |   Errors         : 0
+2026-03-16 15:13:45 | INFO     | PortScan             | ============================================================
+2026-03-16 15:14:02 | INFO     | PortScan             | Starting FAST port scan on 127.0.0.1  |  ports: 8  |  speed: fast
+2026-03-16 15:14:04 | DEBUG    | PortScan             | Port    22 — closed / filtered
+2026-03-16 15:14:06 | DEBUG    | PortScan             | Port    80 — closed / filtered
+2026-03-16 15:14:08 | DEBUG    | PortScan             | Port   443 — closed / filtered
+2026-03-16 15:14:10 | DEBUG    | PortScan             | Port  8080 — closed / filtered
+2026-03-16 15:14:12 | DEBUG    | PortScan             | Port  8443 — closed / filtered
+2026-03-16 15:14:14 | DEBUG    | PortScan             | Port  3306 — closed / filtered
+2026-03-16 15:14:14 | INFO     | PortScan             | Port  5432 — OPEN
+2026-03-16 15:14:16 | DEBUG    | PortScan             | Port  6379 — closed / filtered
+2026-03-16 15:14:16 | INFO     | PortScan             | Scan complete — 1 open port(s) found out of 8 probed
+2026-03-16 15:14:16 | INFO     | PortScan             | ============================================================
+2026-03-16 15:14:16 | INFO     | PortScan             |   SIMULATION SUMMARY — PortScan
+2026-03-16 15:14:16 | INFO     | PortScan             | ============================================================
+2026-03-16 15:14:16 | INFO     | PortScan             |   Target         : 127.0.0.1:80
+2026-03-16 15:14:16 | INFO     | PortScan             |   Duration       : 14.17 s
+2026-03-16 15:14:16 | INFO     | PortScan             |   Packets sent   : 8
+2026-03-16 15:14:16 | INFO     | PortScan             |   Connections    : 8
+2026-03-16 15:14:16 | INFO     | PortScan             |   Bytes sent     : 0
+2026-03-16 15:14:16 | INFO     | PortScan             |   Errors         : 0
+2026-03-16 15:14:16 | INFO     | PortScan             | ============================================================
+2026-03-17 10:39:37 | INFO     | PortScan             | Starting FAST port scan on 127.0.0.1  |  ports: 8  |  speed: fast
+2026-03-17 10:39:37 | INFO     | PortScan             | Port    22 — OPEN
+2026-03-17 10:39:39 | DEBUG    | PortScan             | Port    80 — closed / filtered
+2026-03-17 10:39:39 | INFO     | PortScan             | Port   443 — OPEN
+2026-03-17 10:39:39 | INFO     | PortScan             | Port  8080 — OPEN
+2026-03-17 10:39:39 | INFO     | PortScan             | Port  8443 — OPEN
+2026-03-17 10:39:39 | INFO     | PortScan             | Port  3306 — OPEN
+2026-03-17 10:39:39 | INFO     | PortScan             | Port  5432 — OPEN
+2026-03-17 10:39:39 | INFO     | PortScan             | Port  6379 — OPEN
+2026-03-17 10:39:39 | INFO     | PortScan             | Scan complete — 7 open port(s) found out of 8 probed
+2026-03-17 10:39:39 | INFO     | PortScan             | ============================================================
+2026-03-17 10:39:39 | INFO     | PortScan             |   SIMULATION SUMMARY — PortScan
+2026-03-17 10:39:39 | INFO     | PortScan             | ============================================================
+2026-03-17 10:39:39 | INFO     | PortScan             |   Target         : 127.0.0.1:6100
+2026-03-17 10:39:39 | INFO     | PortScan             |   Duration       : 2.12 s
+2026-03-17 10:39:39 | INFO     | PortScan             |   Packets sent   : 8
+2026-03-17 10:39:39 | INFO     | PortScan             |   Connections    : 8
+2026-03-17 10:39:39 | INFO     | PortScan             |   Bytes sent     : 0
+2026-03-17 10:39:39 | INFO     | PortScan             |   Errors         : 0
+2026-03-17 10:39:39 | INFO     | PortScan             | ============================================================
+2026-03-17 10:39:45 | INFO     | BruteForce           | Starting brute-force against http://127.0.0.1:6100/login  |  username: admin  |  wordlist: 49 entries
+2026-03-17 10:39:55 | INFO     | BruteForce           | Brute-force complete — 49 attempt(s), 0 possible hit(s)
+2026-03-17 10:39:55 | INFO     | BruteForce           | ============================================================
+2026-03-17 10:39:55 | INFO     | BruteForce           |   SIMULATION SUMMARY — BruteForce
+2026-03-17 10:39:55 | INFO     | BruteForce           | ============================================================
+2026-03-17 10:39:55 | INFO     | BruteForce           |   Target         : http://127.0.0.1:6100/login:6100
+2026-03-17 10:39:55 | INFO     | BruteForce           |   Duration       : 10.38 s
+2026-03-17 10:39:55 | INFO     | BruteForce           |   Packets sent   : 49
+2026-03-17 10:39:55 | INFO     | BruteForce           |   Connections    : 49
+2026-03-17 10:39:55 | INFO     | BruteForce           |   Bytes sent     : 1505
+2026-03-17 10:39:55 | INFO     | BruteForce           |   Errors         : 0
+2026-03-17 10:39:55 | INFO     | BruteForce           | ============================================================
+2026-03-17 10:40:11 | INFO     | TrafficFlood         | Stop signal received — shutting down …
+2026-03-17 10:40:12 | INFO     | TrafficFlood         | Flood complete — 467 requests sent, 0 errors
+2026-03-17 10:40:12 | INFO     | TrafficFlood         | ============================================================
+2026-03-17 10:40:12 | INFO     | TrafficFlood         |   SIMULATION SUMMARY — TrafficFlood
+2026-03-17 10:40:12 | INFO     | TrafficFlood         | ============================================================
+2026-03-17 10:40:12 | INFO     | TrafficFlood         |   Target         : http://127.0.0.1:6100/:6100
+2026-03-17 10:40:12 | INFO     | TrafficFlood         |   Duration       : 10.13 s
+2026-03-17 10:40:12 | INFO     | TrafficFlood         |   Packets sent   : 467
+2026-03-17 10:40:12 | INFO     | TrafficFlood         |   Connections    : 467
+2026-03-17 10:40:12 | INFO     | TrafficFlood         |   Bytes sent     : 0
+2026-03-17 10:40:12 | INFO     | TrafficFlood         |   Errors         : 0
+2026-03-17 10:40:12 | INFO     | TrafficFlood         | ============================================================
+2026-03-17 10:40:18 | INFO     | DataExfil            | Chunk 1/10 sent — 512 bytes
+2026-03-17 10:40:18 | INFO     | DataExfil            | Chunk 2/10 sent — 512 bytes
+2026-03-17 10:40:18 | INFO     | DataExfil            | Chunk 3/10 sent — 512 bytes
+2026-03-17 10:40:18 | INFO     | DataExfil            | Chunk 4/10 sent — 512 bytes
+2026-03-17 10:40:19 | INFO     | DataExfil            | Chunk 5/10 sent — 512 bytes
+2026-03-17 10:40:19 | INFO     | DataExfil            | Chunk 6/10 sent — 512 bytes
+2026-03-17 10:40:19 | INFO     | DataExfil            | Chunk 7/10 sent — 512 bytes
+2026-03-17 10:40:19 | INFO     | DataExfil            | Chunk 8/10 sent — 512 bytes
+2026-03-17 10:40:19 | INFO     | DataExfil            | Chunk 9/10 sent — 512 bytes
+2026-03-17 10:40:20 | INFO     | DataExfil            | Chunk 10/10 sent — 512 bytes
+2026-03-17 10:40:20 | INFO     | DataExfil            | Exfiltration complete — 5120 bytes sent across 10 chunk(s)
+2026-03-17 10:40:20 | INFO     | DataExfil            | ============================================================
+2026-03-17 10:40:20 | INFO     | DataExfil            |   SIMULATION SUMMARY — DataExfil
+2026-03-17 10:40:20 | INFO     | DataExfil            | ============================================================
+2026-03-17 10:40:20 | INFO     | DataExfil            |   Target         : http://127.0.0.1:6100/upload:6100
+2026-03-17 10:40:20 | INFO     | DataExfil            |   Duration       : 2.05 s
+2026-03-17 10:40:20 | INFO     | DataExfil            |   Packets sent   : 10
+2026-03-17 10:40:20 | INFO     | DataExfil            |   Connections    : 10
+2026-03-17 10:40:20 | INFO     | DataExfil            |   Bytes sent     : 5120
+2026-03-17 10:40:20 | INFO     | DataExfil            |   Errors         : 0
+2026-03-17 10:40:20 | INFO     | DataExfil            | ============================================================
+2026-03-17 10:40:48 | INFO     | C2Beacon             | Beaconing complete — 4 beacons sent over 21.9s
+2026-03-17 10:40:48 | INFO     | C2Beacon             | ============================================================
+2026-03-17 10:40:48 | INFO     | C2Beacon             |   SIMULATION SUMMARY — C2Beacon
+2026-03-17 10:40:48 | INFO     | C2Beacon             | ============================================================
+2026-03-17 10:40:48 | INFO     | C2Beacon             |   Target         : http://127.0.0.1:6100/beacon:6100
+2026-03-17 10:40:48 | INFO     | C2Beacon             |   Duration       : 21.85 s
+2026-03-17 10:40:48 | INFO     | C2Beacon             |   Packets sent   : 4
+2026-03-17 10:40:48 | INFO     | C2Beacon             |   Connections    : 4
+2026-03-17 10:40:48 | INFO     | C2Beacon             |   Bytes sent     : 219
+2026-03-17 10:40:48 | INFO     | C2Beacon             |   Errors         : 0
+2026-03-17 10:40:48 | INFO     | C2Beacon             | ============================================================

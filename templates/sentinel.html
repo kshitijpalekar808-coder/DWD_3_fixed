@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SentinelAI — Live Intrusion Detection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@300;400;500;700&family=DM+Sans:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<style>
+:root {
+  --bg:    #04080c;
+  --bg2:   #060b10;
+  --surf:  #0a1018;
+  --s2:    #0d1520;
+  --brd:   #112030;
+  --b2:    #163050;
+
+  --blue:  #00c8ff;
+  --bdim:  rgba(0,200,255,0.10);
+  --b3:    rgba(0,200,255,0.04);
+  --b4:    #005577;
+
+  --red:   #ff2244;
+  --rdim:  rgba(255,34,68,0.12);
+  --r2:    rgba(255,34,68,0.05);
+
+  --amber: #ffaa00;
+  --amdim: rgba(255,170,0,0.10);
+
+  --green: #00ff88;
+  --gdim:  rgba(0,255,136,0.08);
+
+  --crit:  #ff2244;
+  --high:  #ffaa00;
+  --med:   #00c8ff;
+  --low:   #00ff88;
+
+  --txt:   #a8cce0;
+  --txt2:  #3a6070;
+  --txt3:  #1e3545;
+
+  --mono:  'JetBrains Mono', monospace;
+  --disp:  'Bebas Neue', sans-serif;
+  --sans:  'DM Sans', sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;background:var(--bg);font-family:var(--mono);color:var(--txt);}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,200,255,0.010) 3px,rgba(0,200,255,0.010) 4px);pointer-events:none;z-index:9999;}
+
+/* TOPBAR */
+.topbar{height:52px;background:var(--bg2);border-bottom:1px solid var(--brd);display:flex;align-items:center;padding:0 22px;gap:16px;flex-shrink:0;}
+.tlogo{font-family:var(--disp);font-size:22px;letter-spacing:.08em;color:var(--blue);}
+.tsub{font-size:10px;color:var(--txt2);letter-spacing:.14em;text-transform:uppercase;border-left:1px solid var(--brd);padding-left:14px;}
+.tright{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.live-pill{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--blue);border:1px solid var(--b4);padding:3px 10px;border-radius:3px;background:var(--bdim);}
+.pulse{width:6px;height:6px;border-radius:50%;background:var(--blue);animation:pp 1.6s infinite;}
+@keyframes pp{0%,100%{opacity:1}50%{opacity:.25}}
+.back-btn{font-size:10px;color:var(--txt2);text-decoration:none;border:1px solid var(--brd);padding:3px 10px;border-radius:3px;background:var(--surf);letter-spacing:.08em;transition:color .15s;}
+.back-btn:hover{color:var(--blue);}
+
+/* LAYOUT */
+.page{display:flex;flex-direction:column;height:100vh;}
+.body{flex:1;display:grid;grid-template-columns:260px 1fr 240px;overflow:hidden;gap:0;}
+
+/* ── LEFT PANEL: threat summary + blocked IPs ── */
+.left-panel{border-right:1px solid var(--brd);display:flex;flex-direction:column;overflow:hidden;background:var(--bg2);}
+.panel-hdr{padding:10px 14px;border-bottom:1px solid var(--brd);font-size:9px;color:var(--txt2);text-transform:uppercase;letter-spacing:.12em;display:flex;align-items:center;gap:7px;flex-shrink:0;}
+.panel-hdr-dot{width:6px;height:6px;border-radius:50%;}
+
+/* Attack type cards */
+.atk-cards{padding:10px;display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
+.atk-card{background:var(--surf);border:1px solid var(--brd);border-radius:5px;padding:10px 12px;display:flex;align-items:center;gap:10px;transition:border-color .2s;}
+.atk-card.active{border-color:var(--red);background:var(--rdim);}
+.atk-icon{font-size:16px;width:24px;text-align:center;flex-shrink:0;}
+.atk-info{flex:1;}
+.atk-name{font-size:10px;color:var(--txt);margin-bottom:2px;}
+.atk-count{font-family:var(--disp);font-size:22px;line-height:1;}
+.atk-count.zero{color:var(--txt3);}
+.atk-count.hit{color:var(--red);}
+
+/* Blocked IPs */
+.blocked-section{flex:1;display:flex;flex-direction:column;overflow:hidden;border-top:1px solid var(--brd);}
+.blocked-list{flex:1;overflow-y:auto;padding:8px;}
+.blocked-ip{display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:3px;background:var(--r2);border:1px solid rgba(255,34,68,.15);margin-bottom:4px;font-size:10px;color:var(--red);animation:slideIn .25s ease;}
+@keyframes slideIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+.blocked-empty{font-size:10px;color:var(--txt3);padding:12px;text-align:center;}
+
+/* ── CENTER: live alert feed ── */
+.center-panel{display:flex;flex-direction:column;overflow:hidden;}
+
+/* Stats row */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--brd);border-bottom:1px solid var(--brd);flex-shrink:0;}
+.stat-box{background:var(--bg2);padding:12px 16px;}
+.sb-label{font-size:9px;color:var(--txt2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;}
+.sb-val{font-family:var(--disp);font-size:28px;line-height:1;}
+.sb-val.blue{color:var(--blue);}
+.sb-val.red{color:var(--red);}
+.sb-val.amber{color:var(--amber);}
+.sb-val.green{color:var(--green);}
+.sb-sub{font-size:9px;color:var(--txt3);margin-top:2px;}
+
+/* Alert table */
+.alert-wrap{flex:1;overflow-y:auto;}
+.alert-table{width:100%;border-collapse:collapse;}
+.alert-table th{position:sticky;top:0;background:var(--s2);padding:7px 12px;text-align:left;font-size:9px;color:var(--txt2);text-transform:uppercase;letter-spacing:.08em;font-weight:400;border-bottom:1px solid var(--brd);}
+.alert-table td{padding:9px 12px;border-bottom:1px solid #0a1520;vertical-align:middle;font-size:11px;}
+.alert-table tr{animation:rowIn .25s ease;}
+@keyframes rowIn{from{opacity:0;background:rgba(0,200,255,.05)}to{opacity:1;background:transparent}}
+.alert-table tr:hover td{background:var(--b3);}
+
+.sev-pill{display:inline-block;padding:2px 8px;border-radius:3px;font-size:9px;font-weight:600;letter-spacing:.06em;}
+.sev-CRITICAL{background:var(--rdim);color:var(--red);border:1px solid rgba(255,34,68,.4);}
+.sev-HIGH{background:var(--amdim);color:var(--amber);border:1px solid rgba(255,170,0,.35);}
+.sev-MEDIUM{background:var(--bdim);color:var(--blue);border:1px solid rgba(0,200,255,.3);}
+.sev-LOW{background:var(--gdim);color:var(--green);border:1px solid rgba(0,255,136,.25);}
+
+.action-pill{display:inline-block;padding:2px 8px;border-radius:3px;font-size:9px;}
+.act-blocked{background:var(--rdim);color:var(--red);border:1px solid rgba(255,34,68,.3);}
+.act-alert{background:var(--amdim);color:var(--amber);border:1px solid rgba(255,170,0,.25);}
+
+.ts-cell{color:var(--txt2);font-size:10px;white-space:nowrap;}
+.ip-cell{color:var(--blue);font-family:var(--mono);font-size:10px;}
+.type-cell{font-size:11px;color:var(--txt);}
+.desc-cell{font-size:10px;color:var(--txt2);max-width:300px;}
+
+.empty-row td{text-align:center;color:var(--txt3);padding:40px;font-size:11px;}
+
+/* ── RIGHT PANEL: sparkline + raw events ── */
+.right-panel{border-left:1px solid var(--brd);display:flex;flex-direction:column;overflow:hidden;background:var(--bg2);}
+
+/* Traffic chart */
+.traffic-section{padding:10px;flex-shrink:0;border-bottom:1px solid var(--brd);}
+.traffic-label{font-size:9px;color:var(--txt2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;display:flex;justify-content:space-between;}
+.spark-bars{display:flex;align-items:flex-end;gap:2px;height:48px;}
+.spark-bar{flex:1;border-radius:1px;min-height:2px;transition:height .3s,background .3s;}
+.rps-val{font-family:var(--disp);font-size:22px;color:var(--blue);margin-top:4px;}
+.rps-sub{font-size:9px;color:var(--txt3);}
+
+/* Event stream */
+.event-section{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.event-body{flex:1;overflow-y:auto;padding:8px;}
+.ev-row{display:flex;gap:6px;padding:4px 0;border-bottom:1px solid #080f18;font-size:10px;}
+.ev-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.ev-dot.http{background:var(--blue);}
+.ev-dot.honeypot{background:var(--red);box-shadow:0 0 4px var(--red);}
+.ev-ts{color:var(--txt3);min-width:50px;flex-shrink:0;}
+.ev-msg{color:var(--txt2);word-break:break-all;}
+.ev-msg.honeypot{color:var(--red);}
+
+/* STATUS BAR */
+.statusbar{height:36px;background:var(--bg2);border-top:1px solid var(--brd);display:flex;align-items:center;padding:0 20px;gap:20px;font-size:10px;flex-shrink:0;}
+.sb-item{display:flex;align-items:center;gap:6px;color:var(--txt2);}
+.sb-v{color:var(--blue);}
+.sb-sep{width:1px;height:18px;background:var(--brd);}
+.clk{margin-left:auto;color:var(--txt2);}
+
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="tlogo">SentinelAI</div>
+    <div class="tsub">Real-Time Intrusion Detection &amp; Response</div>
+    <div class="tright">
+      <div class="live-pill"><span class="pulse"></span>LIVE</div>
+      <button onclick="unblockAll()" style="font-size:10px;padding:3px 10px;border-radius:3px;background:rgba(255,170,0,.1);border:1px solid rgba(255,170,0,.4);color:var(--amber);cursor:pointer;font-family:var(--mono);letter-spacing:.06em;">🔓 Unblock All IPs</button>
+      <a href="/" class="back-btn">← Dashboard</a>
+    </div>
+  </div>
+
+  <!-- STATS ROW -->
+  <div class="stats-row">
+    <div class="stat-box">
+      <div class="sb-label">Total Requests</div>
+      <div class="sb-val blue" id="st-req">0</div>
+      <div class="sb-sub">seen by target server</div>
+    </div>
+    <div class="stat-box">
+      <div class="sb-label">Blocked Requests</div>
+      <div class="sb-val red" id="st-blk">0</div>
+      <div class="sb-sub">returned 403</div>
+    </div>
+    <div class="stat-box">
+      <div class="sb-label">Total Alerts</div>
+      <div class="sb-val amber" id="st-alr">0</div>
+      <div class="sb-sub">across all detectors</div>
+    </div>
+    <div class="stat-box">
+      <div class="sb-label">Banned IPs</div>
+      <div class="sb-val red" id="st-ban">0</div>
+      <div class="sb-sub">auto-blocked attackers</div>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="body">
+
+    <!-- LEFT -->
+    <div class="left-panel">
+      <div class="panel-hdr">
+        <div class="panel-hdr-dot" style="background:var(--amber);"></div>
+        Threat Summary
+      </div>
+      <div class="atk-cards">
+        <div class="atk-card" id="atk-portscan">
+          <div class="atk-icon">🔍</div>
+          <div class="atk-info">
+            <div class="atk-name">Port Scan</div>
+            <div class="atk-count zero" id="cnt-portscan">0</div>
+          </div>
+        </div>
+        <div class="atk-card" id="atk-brute">
+          <div class="atk-icon">🔑</div>
+          <div class="atk-info">
+            <div class="atk-name">Brute Force</div>
+            <div class="atk-count zero" id="cnt-brute">0</div>
+          </div>
+        </div>
+        <div class="atk-card" id="atk-flood">
+          <div class="atk-icon">🌊</div>
+          <div class="atk-info">
+            <div class="atk-name">DDoS / Flood</div>
+            <div class="atk-count zero" id="cnt-flood">0</div>
+          </div>
+        </div>
+        <div class="atk-card" id="atk-exfil">
+          <div class="atk-icon">📤</div>
+          <div class="atk-info">
+            <div class="atk-name">Data Exfiltration</div>
+            <div class="atk-count zero" id="cnt-exfil">0</div>
+          </div>
+        </div>
+        <div class="atk-card" id="atk-c2">
+          <div class="atk-icon">📡</div>
+          <div class="atk-info">
+            <div class="atk-name">C2 Beaconing</div>
+            <div class="atk-count zero" id="cnt-c2">0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="blocked-section">
+        <div class="panel-hdr">
+          <div class="panel-hdr-dot" style="background:var(--red);"></div>
+          Blocked IPs
+          <span id="blocked-count" style="margin-left:auto;color:var(--red);font-size:10px;">0</span>
+        </div>
+        <div class="blocked-list" id="blocked-list">
+          <div class="blocked-empty" id="blocked-empty">No IPs blocked yet</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CENTER -->
+    <div class="center-panel">
+      <div class="panel-hdr" style="border-bottom:1px solid var(--brd);">
+        <div class="panel-hdr-dot" style="background:var(--red);animation:pp 1.5s infinite;"></div>
+        Live Threat Feed
+        <span id="alert-count-badge" style="margin-left:auto;font-size:9px;color:var(--red);">0 alerts</span>
+      </div>
+      <div class="alert-wrap">
+        <table class="alert-table">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Severity</th>
+              <th>Attack Type</th>
+              <th>Source IP</th>
+              <th>Description</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="alert-tbody">
+            <tr class="empty-row"><td colspan="6">No threats detected — system monitoring…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="right-panel">
+      <div class="traffic-section">
+        <div class="traffic-label">
+          <span>Traffic Rate — last 60s</span>
+          <span id="rps-label" style="color:var(--blue);">0 req/s</span>
+        </div>
+        <div class="spark-bars" id="spark-bars">
+          <!-- 30 bars filled by JS -->
+        </div>
+        <div class="rps-val" id="rps-val">0</div>
+        <div class="rps-sub">requests / sec</div>
+      </div>
+
+      <div class="event-section">
+        <div class="panel-hdr">
+          <div class="panel-hdr-dot" style="background:var(--blue);"></div>
+          Raw Event Stream
+        </div>
+        <div class="event-body" id="event-body">
+          <div style="font-size:10px;color:var(--txt3);padding:12px;text-align:center;">Waiting for traffic on port 6100…</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- STATUS BAR -->
+  <div class="statusbar">
+    <div class="sb-item">Target server: <span class="sb-v">port 6100</span></div>
+    <div class="sb-sep"></div>
+    <div class="sb-item">Honeypot: <span class="sb-v">28 ports</span></div>
+    <div class="sb-sep"></div>
+    <div class="sb-item">Detectors: <span class="sb-v">PortScan · BruteForce · Flood · Exfil · C2</span></div>
+    <div class="sb-sep"></div>
+    <div class="sb-item">Uptime: <span class="sb-v" id="uptime-val">0s</span></div>
+    <div class="clk" id="clock">00:00:00</div>
+  </div>
+
+</div>
+
+<script>
+const socket = io();
+
+// clock
+setInterval(() => {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('en',{hour12:false});
+}, 1000);
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── Sparkline state ──────────────────────────────────────────────────────
+let sparkData = new Array(30).fill(0);
+let totalRequests = 0;
+let prevRequests  = 0;
+
+function initSpark() {
+  const container = document.getElementById('spark-bars');
+  container.innerHTML = '';
+  for (let i = 0; i < 30; i++) {
+    const bar = document.createElement('div');
+    bar.className = 'spark-bar';
+    bar.id = 'sb-' + i;
+    bar.style.background = 'var(--brd)';
+    bar.style.height = '2px';
+    container.appendChild(bar);
+  }
+}
+initSpark();
+
+function updateSpark(rps) {
+  sparkData.push(rps);
+  if (sparkData.length > 30) sparkData.shift();
+  const peak = Math.max(...sparkData, 1);
+  for (let i = 0; i < 30; i++) {
+    const bar = document.getElementById('sb-' + i);
+    if (!bar) continue;
+    const pct = sparkData[i] / peak;
+    const h = Math.max(2, Math.round(pct * 48));
+    bar.style.height = h + 'px';
+    bar.style.background = pct > 0.7 ? 'var(--red)' : pct > 0.4 ? 'var(--amber)' : 'var(--blue)';
+  }
+  document.getElementById('rps-val').textContent = rps;
+  document.getElementById('rps-label').textContent = rps + ' req/s';
+}
+
+// ── Alert table ──────────────────────────────────────────────────────────
+let alertCount = 0;
+const ATTACK_ICONS = {
+  'Port Scan':         '🔍',
+  'Brute Force':       '🔑',
+  'DDoS / Flood':      '🌊',
+  'Data Exfiltration': '📤',
+  'C2 Beaconing':      '📡',
+};
+
+function renderAlert(d, opts = {}) {
+  const prepend = opts.prepend !== false;
+  const bumpCount = opts.bumpCount !== false;
+  if (bumpCount) {
+    alertCount++;
+    document.getElementById('alert-count-badge').textContent = alertCount + ' alerts';
+  }
+  // Remove empty row
+  const empty = document.querySelector('.empty-row');
+  if (empty) empty.remove();
+
+  const ts = new Date(d.timestamp * 1000).toLocaleTimeString('en',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const icon = ATTACK_ICONS[d.attack_type] || '⚡';
+  const tbody = document.getElementById('alert-tbody');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td class="ts-cell">${ts}</td>
+    <td><span class="sev-pill sev-${esc(d.severity)}">${esc(d.severity)}</span></td>
+    <td class="type-cell">${icon} ${esc(d.attack_type)}</td>
+    <td class="ip-cell">${esc(d.src_ip)}</td>
+    <td class="desc-cell">${esc(d.description)}</td>
+    <td><span class="${d.auto_blocked ? 'action-pill act-blocked' : 'action-pill act-alert'}">${d.auto_blocked ? '🚫 BLOCKED' : '⚠ ALERT'}</span></td>
+  `;
+  if (prepend) tbody.insertBefore(tr, tbody.firstChild);
+  else tbody.appendChild(tr);
+
+  // Keep max 100 rows
+  while (tbody.rows.length > 100) tbody.deleteRow(tbody.rows.length - 1);
+
+  // Flash the attack card
+  const cardMap = {
+    'Port Scan':         ['atk-portscan', 'cnt-portscan'],
+    'Brute Force':       ['atk-brute',    'cnt-brute'],
+    'DDoS / Flood':      ['atk-flood',    'cnt-flood'],
+    'Data Exfiltration': ['atk-exfil',    'cnt-exfil'],
+    'C2 Beaconing':      ['atk-c2',       'cnt-c2'],
+  };
+  const ids = cardMap[d.attack_type];
+  if (ids) {
+    const card = document.getElementById(ids[0]);
+    const cnt  = document.getElementById(ids[1]);
+    if (card) card.classList.add('active');
+    if (cnt) {
+      const n = parseInt(cnt.textContent || '0') + 1;
+      cnt.textContent = n;
+      cnt.className = 'atk-count hit';
+      setTimeout(() => { if(card) card.classList.remove('active'); }, 2000);
+    }
+  }
+
+  // Add to blocked list if blocked
+  if (d.auto_blocked) {
+    addBlockedIP(d.src_ip);
+  }
+}
+
+socket.on('sentinel_alert', d => renderAlert(d));
+
+// ── Stats update ─────────────────────────────────────────────────────────
+let lastReq = 0;
+setInterval(() => {
+  const delta = totalRequests - lastReq;
+  lastReq = totalRequests;
+  updateSpark(delta);
+}, 2000);
+
+socket.on('sentinel_stats', d => {
+  totalRequests = d.total_requests;
+  document.getElementById('st-req').textContent = d.total_requests.toLocaleString();
+  document.getElementById('st-blk').textContent = d.blocked_requests.toLocaleString();
+  document.getElementById('st-alr').textContent = d.total_alerts;
+  document.getElementById('st-ban').textContent = (d.blocked_ips||[]).length;
+  document.getElementById('blocked-count').textContent = (d.blocked_ips||[]).length;
+  document.getElementById('uptime-val').textContent = formatUptime(d.uptime||0);
+
+  // Update attack type counts
+  const typeMap = {
+    'Port Scan':         'cnt-portscan',
+    'Brute Force':       'cnt-brute',
+    'DDoS / Flood':      'cnt-flood',
+    'Data Exfiltration': 'cnt-exfil',
+    'C2 Beaconing':      'cnt-c2',
+  };
+  const by = d.alerts_by_type || {};
+  for (const [type, elId] of Object.entries(typeMap)) {
+    const el = document.getElementById(elId);
+    if (el) {
+      const n = by[type] || 0;
+      el.textContent = n;
+      el.className = 'atk-count ' + (n > 0 ? 'hit' : 'zero');
+    }
+  }
+
+  // Sync blocked IPs
+  (d.blocked_ips || []).forEach(addBlockedIP);
+});
+
+fetch('/api/sentinel/snapshot')
+  .then(r => r.json())
+  .then(d => {
+    if (d.error) return;
+
+    const alerts = d.alerts || [];
+    alertCount = alerts.length;
+    document.getElementById('alert-count-badge').textContent = alertCount + ' alerts';
+    alerts.forEach(a => renderAlert(a, {prepend: false, bumpCount: false}));
+
+    const stats = d.stats || {};
+    totalRequests = stats.total_requests || 0;
+    document.getElementById('st-req').textContent = totalRequests.toLocaleString();
+    document.getElementById('st-blk').textContent = (stats.blocked_requests || 0).toLocaleString();
+    document.getElementById('st-alr').textContent = stats.total_alerts || 0;
+    document.getElementById('st-ban').textContent = (stats.blocked_ips || []).length;
+    document.getElementById('blocked-count').textContent = (stats.blocked_ips || []).length;
+    document.getElementById('uptime-val').textContent = formatUptime(stats.uptime || 0);
+
+    const typeMap = {
+      'Port Scan':         'cnt-portscan',
+      'Brute Force':       'cnt-brute',
+      'DDoS / Flood':      'cnt-flood',
+      'Data Exfiltration': 'cnt-exfil',
+      'C2 Beaconing':      'cnt-c2',
+    };
+    const by = stats.alerts_by_type || {};
+    for (const [type, elId] of Object.entries(typeMap)) {
+      const el = document.getElementById(elId);
+      if (el) {
+        const n = by[type] || 0;
+        el.textContent = n;
+        el.className = 'atk-count ' + (n > 0 ? 'hit' : 'zero');
+      }
+    }
+
+    (stats.blocked_ips || []).forEach(addBlockedIP);
+  })
+  .catch(() => {});
+
+// ── Raw events (honeypot + HTTP hits) ────────────────────────────────────
+socket.on('sentinel_event', d => {
+  const body = document.getElementById('event-body');
+  // Remove placeholder
+  const ph = body.querySelector('div');
+  if (ph && ph.textContent.includes('Waiting')) ph.remove();
+
+  const ts = new Date(d.timestamp * 1000).toLocaleTimeString('en',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const isHoney = d.event_type === 'honeypot_connect';
+  const msg = isHoney
+    ? `HONEYPOT port ${d.port} — ${d.src_ip}`
+    : `${d.method||'GET'} ${d.path||'/'} — ${d.src_ip}`;
+
+  const row = document.createElement('div');
+  row.className = 'ev-row';
+  row.innerHTML = `
+    <div class="ev-dot ${isHoney?'honeypot':'http'}"></div>
+    <div class="ev-ts">${ts}</div>
+    <div class="ev-msg ${isHoney?'honeypot':''}">${esc(msg)}</div>
+  `;
+  body.insertBefore(row, body.firstChild);
+  while (body.children.length > 60) body.removeChild(body.lastChild);
+});
+
+// ── Blocked IPs ──────────────────────────────────────────────────────────
+const seenIPs = new Set();
+function addBlockedIP(ip) {
+  if (seenIPs.has(ip)) return;
+  seenIPs.add(ip);
+  const empty = document.getElementById('blocked-empty');
+  if (empty) empty.remove();
+  const list = document.getElementById('blocked-list');
+  const div = document.createElement('div');
+  div.className = 'blocked-ip';
+  div.innerHTML = `<span>🚫</span><span>${esc(ip)}</span>`;
+  list.insertBefore(div, list.firstChild);
+  document.getElementById('blocked-count').textContent = seenIPs.size;
+  document.getElementById('st-ban').textContent = seenIPs.size;
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────
+function formatUptime(s) {
+  s = Math.floor(s);
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+}
+
+socket.on('connect', () => {
+  console.log('Connected to DWD SocketIO — SentinelAI bridge active');
+});
+
+function unblockAll() {
+  fetch('/api/sentinel/unblock-all', {method:'POST'})
+    .then(r=>r.json())
+    .then(d=>{
+      if(d.error) { console.error(d.error); return; }
+      // Clear blocked IPs display
+      seenIPs.clear();
+      document.getElementById('blocked-list').innerHTML = '<div class="blocked-empty" id="blocked-empty">No IPs blocked yet</div>';
+      document.getElementById('blocked-count').textContent = '0';
+      document.getElementById('st-ban').textContent = '0';
+      console.log(d.message);
+    })
+    .catch(e=>console.error('Unblock failed:', e));
+}
+</script>
+</body>
+</html>
