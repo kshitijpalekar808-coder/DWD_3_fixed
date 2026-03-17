@@ -9,7 +9,7 @@ from typing import List, Optional
 logger = logging.getLogger("dwd.blue")
 
 try:
-    import anthropic
+    from groq import Groq
     SDK_OK = True
 except ImportError:
     SDK_OK = False
