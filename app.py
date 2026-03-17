@@ -8,6 +8,8 @@ URLs:
   http://localhost:5000/attacker   — Red console (Laptop A / attacker)
   Attack target (SentinelAI):  port 6100
 """
+import gevent.monkey
+gevent.monkey.patch_all()
 import os, sys, threading, time, logging
 from flask import Flask, render_template, jsonify, request
 from flask_socketio import SocketIO, emit
@@ -28,7 +30,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "datawatchdawgs-secret")
 CORS(app)
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="gevent")
  
 from core.battle_engine import BattleEngine, CVE_DB
 try:
@@ -302,7 +304,7 @@ if __name__ == "__main__":
  
     threading.Thread(target=live_ticker, daemon=True).start()
  
-    port = int(os.getenv("DASHBOARD_PORT", 5000))
+    port = int(os.getenv("PORT", os.getenv("DASHBOARD_PORT", 5000)))
     print(f"""
 ╔══════════════════════════════════════════════════╗
 ║   🐾 DWD_3 — DataWatchDawgs + SentinelAI        ║
