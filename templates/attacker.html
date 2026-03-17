@@ -265,7 +265,8 @@ document.getElementById('judges-link').textContent = `${DEFENDER_URL}/judges`;
 document.getElementById('target-ip').value = targetIP;
 
 // Connect socket to defender
-const socket = io(DEFENDER_URL, {transports:['websocket','polling']});
+const BACKEND_URL = window.location.hostname === "localhost" ? "http://localhost:5000" : "https://datawatchdawgs-backend.onrender.com";
+const socket = io(BACKEND_URL, {transports:['websocket','polling']});
 
 let selectedVuln = 'sqli';
 let selectedNet  = 'net_port_scan';

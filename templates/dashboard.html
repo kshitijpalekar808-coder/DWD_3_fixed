@@ -732,7 +732,8 @@ nav{
 </div>
 
 <script>
-const socket = io();
+const BACKEND_URL = window.location.hostname === "localhost" ? "http://localhost:5000" : "https://datawatchdawgs-backend.onrender.com";
+const socket = io(BACKEND_URL);
 let battleRunning = false;
 let oplogLines = [];
 let netlogLines = [];

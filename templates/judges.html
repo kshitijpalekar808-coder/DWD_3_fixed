@@ -768,7 +768,8 @@ body::after {
 </div>
 
 <script>
-const socket = io();
+const BACKEND_URL = window.location.hostname === "localhost" ? "http://localhost:5000" : "https://datawatchdawgs-backend.onrender.com";
+const socket = io(BACKEND_URL);
 
 let stats = { exploits:0, patches:0, net:0, verified:0, battles:0 };
 let curRound = 0;

@@ -325,7 +325,8 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
 </div>
 
 <script>
-const socket = io();
+const BACKEND_URL = window.location.hostname === "localhost" ? "http://localhost:5000" : "https://datawatchdawgs-backend.onrender.com";
+const socket = io(BACKEND_URL);
 
 // clock
 setInterval(() => {
